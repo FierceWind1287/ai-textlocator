@@ -1,0 +1,66 @@
+﻿<Window x:Class="TextLocator.AreaWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TextLocator"
+        mc:Ignorable="d"
+        Title="Search Scope Setting" Height="465" Width="830" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ResizeMode="CanMinimize" Icon="/Resource/App.ico" Loaded="Window_Loaded" >
+    <Grid Margin="10">
+        <StackPanel>
+            <!-- 文字提示 -->
+            <TextBlock Text="	&quot;Area	&quot; represents the search scope (needs to be enabled for use in search)." FontWeight="Bold" Foreground="OrangeRed"/>
+            <!-- 表头 -->
+            <Grid>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                    <Grid Width="150" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock Text="Area Name" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <Grid Width="350" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock Text="Folders" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <Grid Width="120" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock Text="File Type" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <Grid Width="140" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock Text="Operation" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+                <!-- 分割线 -->
+                <Line X1="0" Y1="0" X2="810" Y2="0" Margin="0,0,0,0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="0.5"></Line>
+            </Grid>
+            <!-- 列表区 -->
+            <ScrollViewer Height="310" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+                <StackPanel x:Name="AreaInfoList">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                            <Grid Width="150" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <CheckBox Margin="10,0,0,0" Height="20" Content="Default Area" VerticalAlignment="Center" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Width="350" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock Text="C:\Users\liulei\Desktop\"/>
+                                <TextBlock Text="C:\Users\liulei\Documents\"/>
+                            </StackPanel>
+                            <Grid Width="120" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock Text="Word，Excel，Image" TextWrapping="Wrap" Margin="5"/>
+                            </Grid>
+
+                            <Grid Width="140" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <Button Content="Edit" Margin="0,0,70,0" Width="60" Foreground="White" Background="#2196f3"/>
+                                <Button Content="Delete" Margin="70,0,0,0" Width="60" Background="Red" Foreground="White"/>
+                            </Grid>
+                        </StackPanel>
+                        <!-- 分割线 -->
+                        <Line X1="10" Y1="0" X2="800" Y2="0" Margin="0,0,0,0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="0.5"></Line>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+
+        <Grid Margin="0,10,0,0" VerticalAlignment="Bottom">
+            <Button x:Name="AddButton" Content="Add" Margin="0,0,0,0" Width="60" Click="AddButton_Click" Foreground="White" Background="#2196f3"/>
+            <Button x:Name="SaveButton" Content="Save" Margin="0,0,10,0" HorizontalAlignment="Right" Width="60" Background="Green" Foreground="White" Click="SaveButton_Click"/>
+            <Button x:Name="ExitButton" Content="Exit" Margin="150,0,0,0" Width="60" Background="Red" Click="ExitButton_Click" Visibility="Collapsed"/>
+        </Grid>
+    </Grid>
+</Window>

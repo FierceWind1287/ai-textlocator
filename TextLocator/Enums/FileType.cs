@@ -1,0 +1,62 @@
+﻿using System.ComponentModel;
+
+namespace TextLocator.Enums
+{
+    /// <summary>
+    /// 文件类型
+    /// </summary>
+    public enum FileType
+    {
+        /// <summary>
+        /// 全部
+        /// </summary>
+        [Description("all")]
+        All,
+        /// <summary>
+        /// Word文档
+        /// </summary>
+        [Description("doc,docx")]
+        Word,
+        /// <summary>
+        /// Excel表格
+        /// </summary>
+        [Description("xls,xlsx")]
+        Excel,
+        /// <summary>
+        /// PowerPoint
+        /// </summary>
+        [Description("ppt,pptx")]
+        PowerPoint,
+        /// <summary>
+        /// PDF文档
+        /// </summary>
+        [Description("pdf")]
+        PDF,
+        /// <summary>
+        /// XML和html
+        /// </summary>
+        [Description("html,xml")]
+        DOM,
+        /// <summary>
+        /// TXT文档
+        /// </summary>
+        [Description("txt")]
+        Text,
+        /// <summary>
+        /// 常用图片
+        /// </summary>
+        [Description("jpg,png,gif,jpeg,bmp")]
+        Image,
+        /// <summary>
+        /// 常用压缩包
+        /// </summary>
+        [Description("rar,zip,7z,tar,jar")]
+        Archive,
+        /// <summary>
+        /// 程序员代码
+        /// </summary>
+        [Description("cs,java,js,css,md,py,c,h,cpp,lua,sql,jsp,json,php,rs,rb,yml,yaml,bat,ps1,vue,md")]
+        SourceCode
+    }
+
+}

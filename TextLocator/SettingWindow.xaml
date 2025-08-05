@@ -1,0 +1,99 @@
+﻿<Window x:Class="TextLocator.SettingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TextLocator"
+        xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore"
+        mc:Ignorable="d"
+        x:Name="hotkey"
+        Title="Setting" Height="596.25" Width="1060" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ResizeMode="CanMinimize" Icon="/Resource/App.ico" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#252526" />
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid Margin="0,0,0,50">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Index and Files" >
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                            <!-- 索引更新任务间隔时间 -->
+                            <Grid Width="500">
+                                <TextBlock Text="Index Update:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                                <CheckBox x:Name="EnableIndexUpdateTask" Content="Enable Auto Update Task (Requires Restart)" Margin="100,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                <Grid Margin="20,30,20,0">
+                                    <Grid HorizontalAlignment="Left">
+                                        <TextBox x:Name="IndexUpdateTaskInterval" Text="10" ToolTip="Recommendation: >5 min and &lt;60 min" HorizontalAlignment="Left" Width="100" input:InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Number_TextBox_PreviewTextInput"/>
+                                        <TextBlock Text="Unit: Minutes (Too long may delay updates)"  HorizontalAlignment="Left" Margin="110,0,0,0" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <!-- 分割线 -->
+                            <Line X1="0" Y1="60" X2="0" Y2="0" Margin="10,0,10,0" Stroke="Gray" StrokeThickness="1"></Line>
+                            <!-- 文件读取超时时间 -->
+                            <Grid Width="500">
+                                <TextBlock Text="File Read Timeout:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                                <Grid Margin="20,30,20,0">
+                                    <Grid HorizontalAlignment="Left">
+                                        <TextBox x:Name="FileContentReadTimeout" Text="10" ToolTip="Recommendation: >5 min and &lt;15 min"  HorizontalAlignment="Left" Width="100" input:InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Number_TextBox_PreviewTextInput"/>
+                                        <TextBlock Text="Unit: Minutes (Too short may cause no results; too long delays response)"  HorizontalAlignment="Left" Margin="110,0,0,0" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="List and Cache" >
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                            <!-- 结果列表分页条数 -->
+                            <Grid Width="500">
+                                <TextBlock Text="Results Per Page:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                                <Grid Margin="20,30,20,0">
+                                    <Grid HorizontalAlignment="Left">
+                                        <TextBox x:Name="ResultListPageSize" Text="100" ToolTip="Recommendation: >50 and &lt;300 rows" HorizontalAlignment="Left" Width="100" input:InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Number_TextBox_PreviewTextInput"/>
+                                        <TextBlock Text="Default: 100 (Too many rows may slow down performance)"  HorizontalAlignment="Left" Margin="110,0,0,0" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <!-- 分割线 -->
+                            <Line X1="0" Y1="60" X2="0" Y2="0" Margin="10,0,10,0" Stroke="Gray" StrokeThickness="1"></Line>
+                            <!-- 缓存池容量 -->
+                            <Grid Width="500">
+                                <TextBlock Text="Cache Pool Size:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                                <Grid Margin="20,30,20,0">
+                                    <Grid HorizontalAlignment="Left">
+                                        <TextBox x:Name="CachePoolCapacity" Text="100000" ToolTip="Adjust based on CPU/Memory usage"  HorizontalAlignment="Left" Width="100" input:InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Number_TextBox_PreviewTextInput"/>
+                                        <TextBlock Text="Default: 100000 (Cache includes: index flags, file content, etc.)"  HorizontalAlignment="Left" Margin="110,0,0,0" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Content Preview" >
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                            <!-- 预览上下文摘要 -->
+                            <Grid Width="500">
+                                <TextBlock Text="Preview Summary:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                                <CheckBox x:Name="EnablePreviewSummary" Content="Enable Preview Summary (Context Summary by Default)" Margin="120,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                <Grid Margin="20,30,20,0">
+                                    <Grid HorizontalAlignment="Left">
+                                        <TextBox x:Name="FileContentBreviaryCutLength" Text="60" ToolTip="Recommendation: >=30 and &lt;120"  HorizontalAlignment="Left" Width="100" input:InputMethod.IsInputMethodEnabled="False" PreviewTextInput="Number_TextBox_PreviewTextInput"/>
+                                        <TextBlock Text="Default: 60 (30 characters before + 30 after keyword)"  HorizontalAlignment="Left" Margin="110,0,0,0" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+                    
+                    <!-- 底部增加10高度，否则太近了 -->
+                    <Grid Margin="0,10,0,0"></Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+        <!-- 功能按钮 -->
+        <Button x:Name="SaveClose" Content="Save" Background="Green" Foreground="White" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,10" Width="60" Click="SaveClose_Click"/>
+    </Grid>
+</Window>

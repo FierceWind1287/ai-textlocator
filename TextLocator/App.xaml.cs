@@ -55,7 +55,8 @@ namespace TextLocator
         {
             Assembly assembly = Assembly.GetExecutingAssembly();
             string uniqueName = string.Format(CultureInfo.InvariantCulture, "Local\\{{{0}}}{{{1}}}", assembly.GetType().GUID, assembly.GetName().Name);
-            if (SingleInstance<App>.InitializeAsFirstInstance(uniqueName)) {
+            if (SingleInstance<App>.InitializeAsFirstInstance(uniqueName))
+            {
                 var app = new App();
                 app.InitializeComponent();
                 app.Run();
@@ -113,21 +114,9 @@ namespace TextLocator
                 SetDllDirectory(externDir);               // Win7 fallback
 
             /* ②  初始化 Whisper */
-            string whisperModelDir = Path.Combine(externDir, "distil-whisper-large"); // ← 你的模型文件夹名
-            if (!Directory.Exists(whisperModelDir))
-            {
-                MessageBox.Show($"模型目录不存在：{whisperModelDir}");
-                Shutdown();
-                return;
-            }
-
-            int rc = WhisperNative.Init(whisperModelDir, "AUTO");   // 用 AUTO 让 OpenVINO 自动挑设备
-            if (rc != 0)
-            {
-                MessageBox.Show($"Whisper 初始化失败：错误码 {rc}");
-                Shutdown();
-                return;
-            }
+            string whisperModel = @"E:\Intel\distil-whisper-large";         // ← 改成你的模型路径
+            int rc = WhisperNative.Init(whisperModel, "CPU");
+            if (rc != 0) MessageBox.Show($"Whisper 初始化失败：错误码 {rc}");
 
 
             /* ⑤  继续原来启动流程 */
@@ -176,11 +165,11 @@ namespace TextLocator
                 FileInfoServiceFactory.Register(FileType.DOM, new DomFileService());
                 // 纯文本服务
                 FileInfoServiceFactory.Register(FileType.Text, new TxtFileService());
-				// 常用图片服务
+                // 常用图片服务
                 FileInfoServiceFactory.Register(FileType.Image, new NoTextFileService());
                 // 常用压缩包
                 FileInfoServiceFactory.Register(FileType.Archive, new ZipFileService());
-				// 程序员服务
+                // 程序员服务
                 FileInfoServiceFactory.Register(FileType.SourceCode, new CodeFileService());
             }
             catch (Exception ex)

@@ -5,105 +5,266 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using KeywordAI;            // 你的 CleanRawOutput
+using System.Linq;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;   // ★ 用于 NativeLibrary 和 Win32 API
+using KeywordAI;
 
 internal class Program
 {
-    static async Task<int> Main(string[] args)
+    // ─────────────── 全局计时 & 文件日志 ───────────────
+    static readonly System.Diagnostics.Stopwatch _sw = System.Diagnostics.Stopwatch.StartNew();
+    static StreamWriter? _fileLog;
+
+    static void InitFileLog()
     {
-        // ── 0. 将后续 Console.WriteLine 全部重定向到 stderr ──────────────────
-        var stdout = Console.Out;                // 先保存真正的 stdout
-        Console.SetOut(Console.Error);           // 日志一律写到 stderr
+        string? dir = Environment.GetEnvironmentVariable("KEYWORD_LOG_DIR");
+        if (string.IsNullOrWhiteSpace(dir)) dir = AppContext.BaseDirectory;
+        Directory.CreateDirectory(dir!);
+        string path = Path.Combine(dir!, "ks.log");
 
-        // ── 1. 读取查询 ────────────────────────────────────────────────
-        if (args.Length == 0)
+        _fileLog = new StreamWriter(
+            new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
+            new UTF8Encoding(false))
+        { AutoFlush = true };
+
+        Console.Error.WriteLine($"[logger] file log at: {path}");
+        _fileLog!.WriteLine();
+        _fileLog!.WriteLine($"==== KeywordService start {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} pid={Environment.ProcessId} ====");
+    }
+
+    static void CloseFileLog()
+    {
+        try { _fileLog?.Flush(); _fileLog?.Dispose(); } catch { }
+        _fileLog = null;
+    }
+
+    static void Log(string msg)
+    {
+        string line = $"[{_sw.Elapsed.TotalSeconds,7:0.000}s][pid {Environment.ProcessId}] {msg}";
+        Console.Error.WriteLine(line);
+        try { _fileLog?.WriteLine(line); } catch { }
+    }
+
+    // —— 兜底：从用户原文里抠 3–5 个内容词，避免空结果 —— 
+    static string FallbackFromUserText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        var stop = new HashSet<string>(new[] {
+            "the","a","an","and","or","of","to","for","in","on","at","by","with","as","from","about",
+            "is","are","was","were","be","been","being","this","that","these","those",
+            "it","its","into","than","then","over","under","between","among","within","without",
+            "how","what","why","when","where","who","whom","which","please"
+        }, StringComparer.OrdinalIgnoreCase);
+
+        var tokens = new string(text.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || c == '_').ToArray())
+                        .Replace('_', ' ')
+                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim().ToLowerInvariant())
+                        .Where(s => s.Length >= 3 && !stop.Contains(s))
+                        .Distinct()
+                        .Take(5);
+
+        return string.Join(", ", tokens);
+    }
+
+    // —— 打印实际被加载的 llama.dll 路径 —— 
+    [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern uint GetModuleFileName(IntPtr hModule, StringBuilder lpFilename, int nSize);
+
+    static string? GetLoadedPath(string module)
+    {
+        var h = GetModuleHandle(module);
+        if (h == IntPtr.Zero) return null;
+        var sb = new StringBuilder(1024);
+        var n = GetModuleFileName(h, sb, sb.Capacity);
+        return n > 0 ? sb.ToString() : null;
+    }
+
+    // —— 强制预加载 CUDA 版原生库（在 LoadFromFile 之前调用）——
+    static void PreloadCudaNativeLibs()
+    {
+        string cudaDir = Path.Combine(AppContext.BaseDirectory, "runtimes", "win-x64", "native", "cuda12");
+        string[] candidates =
         {
-            Console.Error.Write("请输入查询：");
-            args = new[] { Console.ReadLine() ?? "" };
-        }
-        string userInput = string.Join(" ", args);
+            Path.Combine(cudaDir, "ggml-cuda.dll"),  // 有的包名就是这个
+            Path.Combine(cudaDir, "ggml-base.dll"),  // 有的包还会带这个
+            Path.Combine(cudaDir, "llama.dll"),
 
-        // ── 2. 模型路径 (相对路径，防止部署目录不同) ─────────────────────
-        string modelPath = Path.Combine(AppContext.BaseDirectory,
-                                 "granite-3.3-2b-instruct-Q4_K_M.gguf");
-        if (!File.Exists(modelPath))
-        {
-            Console.Error.WriteLine($"Model not found: {modelPath}");
-            return 1;
-        }
-
-        // ── 3. Prompt ──────────────────────────────────────────────────
-        string prompt = $@"You are a keyword-extraction assistant.
-**Return *exactly 3-5* distinct core keywords or short phrases,
-comma-separated, lowercase, no line breaks, no extra words.**
-
-query: ""{userInput}""
-keywords:";
-
-        // ── 4. 加载模型 ────────────────────────────────────────────────
-        var mp = new ModelParams(modelPath) { ContextSize = 512, GpuLayerCount = 6 };
-        using var w = LLamaWeights.LoadFromFile(mp);
-        using var cx = w.CreateContext(mp);
-        var ex = new StatelessExecutor(w, mp);
-
-        // ── 5. 推理（用 AntiPrompt “Query:” 终止，而不是遇到换行就停） ─────
-        var ip = new InferenceParams
-        {
-            MaxTokens = 60,
-            AntiPrompts = new[] { "Query:" }
         };
 
-        // 6. 收集模型输出
-        var sb = new StringBuilder();
-        await foreach (var tk in ex.InferAsync(prompt, ip, CancellationToken.None))
-            sb.Append(tk);
-
-        string rawOutput = sb.ToString();
-
-        // ───────★ 只加下面这一段保险丝 ★─────────
-        static string StripSecondRound(string txt)
+        foreach (var p in candidates)
         {
-            if (string.IsNullOrWhiteSpace(txt)) return "";
-
-            // ① 统一换行 -> 空格，方便后面找
-            txt = txt.Replace('\n', ' ').Replace("\r", "");
-
-            // ② 出现下列关键词就截断
-            string[] stops = { "query:", "keywords:", "keyword:" };
-
-            int cut = txt.Length;
-            foreach (var stop in stops)
+            if (!File.Exists(p)) continue;
+            try
             {
-                int idx = txt.IndexOf(stop, StringComparison.OrdinalIgnoreCase);
-                if (idx >= 0 && idx < cut) cut = idx;
+                NativeLibrary.Load(p);
+                Log("preloaded: " + p);
+            }
+            catch (Exception ex)
+            {
+                Log("WARN preload failed: " + p + " -> " + ex.Message);
+            }
+        }
+
+        // 打印实际命中的 llama.dll
+        var loaded = GetLoadedPath("llama.dll");
+        if (loaded != null) Log("llama.dll loaded from: " + loaded);
+        else Log("llama.dll not loaded yet");
+    }
+
+    static async Task<int> Main(string[] args)
+    {
+        InitFileLog();
+
+        // 打开底层日志（能看到是否初始化 CUDA）
+        Environment.SetEnvironmentVariable("GGML_LOG_LEVEL", "DEBUG"); // 或 TRACE
+        Environment.SetEnvironmentVariable("LLAMA_LOG_LEVEL", "INFO");
+
+        // 只把最终结果保留到 stdout，其他都走 stderr/file
+        var realStdout = Console.Out;
+        Console.SetOut(Console.Error);
+
+        try
+        {
+            Log("[svc] hello, I am new build");
+            Log($"base dir: {AppContext.BaseDirectory}");
+
+            // 读取查询
+            if (args.Length == 0)
+            {
+                Console.Error.Write("请输入查询：");
+                args = new[] { Console.ReadLine() ?? "" };
+            }
+            string userInput = string.Join(" ", args);
+            Log($"query: \"{userInput}\"");
+
+            // 模型路径
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "granite-3.3-2b-instruct-Q4_K_M.gguf");
+            Log($"model path: {modelPath}");
+            if (!File.Exists(modelPath)) { Log("MODEL NOT FOUND"); return 1; }
+
+            // Prompt（尽量短 & 不含“query:/keywords:”标签）
+            string prompt =
+              "Return a comma-separated list of 3 to 5 lowercase keywords only.\n" +
+              $"Text: \"{userInput}\"\n" +
+              "Keywords:";
+
+            Log("prompt built");
+
+            // 配置（可用环境变量覆盖）
+            int ctxInt = Math.Clamp(ParseEnvInt("KEYWORD_CTX", 256), 8, 4096);
+            int gpuLayer = ParseEnvInt("KEYWORD_GPU_LAYERS", 40); // -1: 尽量多层上 GPU；0: 全 CPU
+            int maxTok = ParseEnvInt("KEYWORD_MAXTOK", 16);
+            Log($"config: ctx={ctxInt}, gpu_layers={gpuLayer}, max_tokens={maxTok}");
+
+            // ★★★ 关键：强制预加载 CUDA 版原生库
+            PreloadCudaNativeLibs();
+
+            // 加载 & 创建上下文（分段计时）
+            var t0 = _sw.ElapsedMilliseconds;
+            Log("loading weights...");
+            var mp = new ModelParams(modelPath)
+            {
+                ContextSize = (uint)ctxInt,
+                GpuLayerCount = gpuLayer,
+                MainGpu = 0,
+            };
+            using var w = LLamaWeights.LoadFromFile(mp);
+            Log($"weights loaded (+{_sw.ElapsedMilliseconds - t0} ms), creating context...");
+            var t1 = _sw.ElapsedMilliseconds;
+            using var cx = w.CreateContext(mp);
+            Log($"context created (+{_sw.ElapsedMilliseconds - t1} ms)");
+            var ex = new StatelessExecutor(w, mp);
+
+            // 推理参数
+            var ip = new InferenceParams
+            {
+                MaxTokens = maxTok,
+                AntiPrompts = new[] { "\n", "query:", "Query:", "keywords:", "keyword:", "answer:", "output:" }
+            };
+
+            // 推理
+            Log("inference begin");
+            var t2 = _sw.ElapsedMilliseconds;
+            var sb = new StringBuilder();
+            await foreach (var tk in ex.InferAsync(prompt, ip, CancellationToken.None))
+                sb.Append(tk);
+            Log($"inference end (+{_sw.ElapsedMilliseconds - t2} ms)");
+
+            string raw = sb.ToString();
+            Log($"raw length = {raw.Length}");
+
+            // 保险丝：截掉“第二轮”
+            static string StripSecondRound(string txt)
+            {
+                if (string.IsNullOrWhiteSpace(txt)) return "";
+                txt = txt.Replace('\n', ' ').Replace("\r", "");
+                string[] stops = { "query:", "keywords:", "keyword:", "answer:", "output:" };
+                int cut = txt.Length;
+                foreach (var stop in stops)
+                {
+                    int idx = txt.IndexOf(stop, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0 && idx < cut) cut = idx;
+                }
+                return txt.Substring(0, cut).Trim();
+            }
+            raw = StripSecondRound(raw).Trim();
+
+            // 清洗 + 黑名单
+            string cleaned = KeywordUtils.CleanRawOutput(raw).Replace('_', ' ');
+            var bad = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "query","keyword","keywords","answer","output","input","example" };
+
+            var items = cleaned
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim().TrimEnd(':'))
+                .Where(s => s.Length > 1 && !bad.Contains(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            // 兜底
+            if (items.Count < 3)
+            {
+                var fb = FallbackFromUserText(userInput);
+                if (!string.IsNullOrWhiteSpace(fb))
+                {
+                    items = items.Concat(
+                                fb.Split(',').Select(x => x.Trim())
+                                  .Where(x => x.Length > 1 && !bad.Contains(x)))
+                             .Distinct(StringComparer.OrdinalIgnoreCase)
+                             .Take(5)
+                             .ToList();
+                }
             }
 
-            return txt.Substring(0, cut).Trim();
+            cleaned = string.Join(", ", items);
+            Log($"cleaned: \"{cleaned}\"");
+
+            // 输出最终结果到 stdout（宿主读这个）
+            Console.SetOut(realStdout);
+            Console.WriteLine(cleaned.Trim());
+            Console.SetOut(Console.Error);
+
+            Log($"result written to stdout; exit ok (total {_sw.ElapsedMilliseconds} ms)");
+            return 0;
         }
-
-        rawOutput = StripSecondRound(rawOutput);
-
-        // —— 新增：如果出现下一轮 prompt，就把它切掉 —— 
-        int cut = rawOutput.IndexOf("query:", StringComparison.OrdinalIgnoreCase);
-        if (cut >= 0)            // 找到了 "query:"
-            rawOutput = rawOutput.Substring(0, cut);
-
-        rawOutput = rawOutput.Trim();
-
-
-        // ── 6. 清洗关键词 ──────────────────────────────────────────────
-        string cleaned = KeywordUtils.CleanRawOutput(rawOutput);
-
-        // ── 7. 只把最后结果写到 **stdout** ──────────────────────────────
-        Console.SetOut(stdout);                  // 切换回 stdout
-        Console.WriteLine(cleaned.Trim());
-
-        // 如果是交互模式，方便手动运行查看
-        if (args.Length == 0 && !Console.IsInputRedirected)
+        catch (Exception ex)
         {
-            Console.Error.WriteLine("(Press any key to exit)");
-            Console.ReadKey(true);
+            Log("FATAL: " + ex);
+            Console.SetOut(realStdout);
+            Console.WriteLine(""); // 防调用端阻塞
+            return 2;
         }
-        return 0;
+        finally
+        {
+            CloseFileLog();
+        }
     }
+
+    static int ParseEnvInt(string key, int def)
+        => int.TryParse(Environment.GetEnvironmentVariable(key), out var v) ? v : def;
 }

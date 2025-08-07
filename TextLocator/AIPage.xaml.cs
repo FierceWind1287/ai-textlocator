@@ -120,7 +120,7 @@ namespace TextLocator
             var dlg = new RecordWindow { Owner = this };
             if (dlg.ShowDialog() != true || dlg.RecordedPcm == null) return;
 
-            var prog = new ProgressWindow { Owner = this,Hint= "Transcribing audio, please wait…" }; prog.Show();
+            var prog = new ProgressWindow { Owner = this, Hint = "Transcribing audio, please wait…" }; prog.Show();
             try
             {
                 int n = dlg.RecordedPcm.Length / 2;
@@ -160,7 +160,8 @@ namespace TextLocator
             try
             {
                 // ② 在后台线程执行关键词提取（不会阻塞 UI）
-                string[] keywords = await Task.Run(() => ExtractKeywordsAsync(query));
+                // 建议：这里其实不用 Task.Run，因为 ExtractKeywordsAsync 本身就是异步的
+                string[] keywords = await ExtractKeywordsAsync(query);
 
                 if (keywords.Length == 0)
                 {
@@ -200,47 +201,73 @@ namespace TextLocator
             }
         }
 
-
-        // ────────────────── 调用 KeywordService.exe ──────────────────
+        // ────────────────── 调用 KeywordService.exe（实时 stderr 日志 + 超时） ──────────────────
         private async Task<string[]> ExtractKeywordsAsync(string userInput)
         {
             string exe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "KeywordService.exe");
             if (!File.Exists(exe))
                 throw new FileNotFoundException("Keyword service does not exist", exe);
 
+            string escaped = userInput.Replace("\"", "\\\"");
             var psi = new ProcessStartInfo
             {
                 FileName = exe,
-                Arguments = "\"" + userInput.Replace("\"", "\\\"") + "\"",
+                Arguments = "\"" + escaped + "\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                WorkingDirectory = Path.GetDirectoryName(exe)!    // ★ 固定工作目录，避免相对路径问题
             };
 
-            using var p = Process.Start(psi)!;
-            var outTask = p.StandardOutput.ReadToEndAsync();
-            var errTask = p.StandardError.ReadToEndAsync();
-            var readAllTask = Task.WhenAll(outTask, errTask);     // ★ 只建一次
+            using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
-            // 40s → 60s
-            var finished = await Task.WhenAny(readAllTask, Task.Delay(60_000));
-            if (finished != readAllTask)
+            // 收集 stderr，便于超时时抛出
+            var errBuf = new System.Text.StringBuilder();
+            p.ErrorDataReceived += (s, ev) =>
             {
-                try { p.Kill(); } catch { }
-                string err = await errTask;
-                throw new TimeoutException("KeywordService initial load timeout (>60s).\n" +
-                                           "Please retry or check the CPU usage / model path.\n" + err);
+                if (!string.IsNullOrEmpty(ev.Data))
+                {
+                    errBuf.AppendLine(ev.Data);
+                    Debug.WriteLine("[KeywordService][stderr] " + ev.Data);   // VS Output 实时看到
+                }
+            };
+
+            // 如果你也想实时看 stdout，可取消注释；否则保留一次性读取便于解析
+            // p.OutputDataReceived += (s, ev) =>
+            // {
+            //     if (!string.IsNullOrEmpty(ev.Data))
+            //         Debug.WriteLine("[KeywordService][stdout] " + ev.Data);
+            // };
+
+            var sw = Stopwatch.StartNew();
+            p.Start();
+            p.BeginErrorReadLine();
+            // p.BeginOutputReadLine(); // 我们还是一次性读 stdout
+
+            // 一次性读取 stdout（关键词结果）
+            var outTask = p.StandardOutput.ReadToEndAsync();
+
+            // 等待完成或超时
+            var finished = await Task.WhenAny(outTask, Task.Delay(60_000));
+            if (finished != outTask)
+            {
+                try { if (!p.HasExited) p.Kill(); } catch { /* ignore */ }
+                Debug.WriteLine($"[KeywordService][timeout] after {sw.ElapsedMilliseconds} ms");
+                throw new TimeoutException("KeywordService initial load timeout (>60s).\n" + errBuf.ToString());
             }
 
+            // 确保子进程退出，收尾 stderr
+            p.WaitForExit();
+            Debug.WriteLine($"[KeywordService] done in {sw.ElapsedMilliseconds} ms");
 
             string raw = (await outTask).Trim();
-            Debug.WriteLine("KeywordService >>> " + raw);
+            Debug.WriteLine("[KeywordService][stdout] " + raw);
 
             return string.IsNullOrWhiteSpace(raw)
                    ? Array.Empty<string>()
-                   : raw.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)  // ← 只看逗号
-                        .Select(k => k.Trim())                                        // 去首尾空格
+                   : raw.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(k => k.Trim())
                         .Where(k => k.Length > 0)
                         .Distinct()
                         .ToArray();
@@ -249,8 +276,16 @@ namespace TextLocator
         // ────────────────── 预热 ──────────────────
         private async Task WarmupKeywordService()
         {
-            try { await ExtractKeywordsAsync("warm-up"); }
-            catch (Exception ex) { Debug.WriteLine("Warm-up failed: " + ex.Message); }
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                _ = await ExtractKeywordsAsync("warm-up"); // 日志会在 ExtractKeywordsAsync 里输出
+                Debug.WriteLine($"[Warmup] finished in {sw.ElapsedMilliseconds} ms");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Warm-up failed: " + ex.Message);
+            }
         }
     }
 }

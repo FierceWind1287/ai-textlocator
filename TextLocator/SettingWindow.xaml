@@ -19,7 +19,7 @@
         <Grid Margin="0,0,0,50">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Index and Files" >
+                    <GroupBox  Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Index and Files" >
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                             <!-- 索引更新任务间隔时间 -->
                             <Grid Width="500">
@@ -46,7 +46,7 @@
                             </Grid>
                         </StackPanel>
                     </GroupBox>
-                    <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="List and Cache" >
+                    <GroupBox  Width="Auto" Height="Auto" Margin="0 0 0 10" Header="List and Cache" >
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                             <!-- 结果列表分页条数 -->
                             <Grid Width="500">
@@ -72,7 +72,7 @@
                             </Grid>
                         </StackPanel>
                     </GroupBox>
-                    <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Content Preview" >
+                    <GroupBox Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Content Preview" >
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                             <!-- 预览上下文摘要 -->
                             <Grid Width="500">

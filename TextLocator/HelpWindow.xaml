@@ -3,40 +3,107 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TextLocator"
-        xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore"
         mc:Ignorable="d"
-        x:Name="help"
-        Title="帮助" Height="350" Width="586" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ResizeMode="CanMinimize" Icon="/Resource/App.ico" Closed="Window_Closed">
+        Title="Help"
+        Height="350" Width="600"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="ToolWindow"
+        ResizeMode="CanMinimize"
+        Icon="/Resource/App.ico"
+        Closed="Window_Closed">
+
     <Window.Resources>
+        <!-- 可选：给 TextBlock 一个默认前景色 -->
         <Style TargetType="TextBlock">
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#252526" />
+            <Setter Property="Foreground" Value="#252526"/>
         </Style>
     </Window.Resources>
+
     <Grid>
-        <StackPanel>
-            <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="联系作者（如需帮助，可以联系我哦）" >
-                <StackPanel Orientation="Vertical" Margin="0,10,0,10">
-                    <!-- 联系方式 -->
-                    <TextBlock Text="姓名：刘磊" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="微信：liulei901112" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                    <TextBlock Text="邮箱：liulei901112@163.com" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+        <StackPanel Margin="12">
+
+            <!-- 原作者 -->
+            <GroupBox Header="Original Author"
+                      Margin="0,0,0,10"
+                      BorderBrush="#2F7AE5"
+                      BorderThickness="1"
+                      Padding="8">
+                <StackPanel Orientation="Vertical" Margin="0,2,0,0">
+                    <TextBlock Text="Name: Lei Liu"   HorizontalAlignment="Left"/>
+                    <TextBlock Text="Wechat: liulei901112" HorizontalAlignment="Left"/>
+                    <TextBlock Text="Email: liulei901112@163.com" HorizontalAlignment="Left"/>
+                    <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap">
+            <Run Text="Github: " />
+            <Hyperlink NavigateUri="https://github.com/liulei901112/TextLocator"
+                       RequestNavigate="Hyperlink_RequestNavigate"
+                       Foreground="#2F7AE5"
+                       TextDecorations="{x:Null}">
+                https://github.com/liulei901112/TextLocator
+            </Hyperlink>
+                    </TextBlock>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Style="{StaticResource ColorHeaderGroupBox}" Width="Auto" Height="Auto" Margin="0 0 0 10" Header="奖励作者（如果对您有帮助，并且您愿意）" >
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                    <Grid Width="293">
-                        <!-- 微信 -->
-                        <Image Source="/Resource/donate/weixin.png" Width="150"/>
-                    </Grid>
-                    <Grid Width="293">
-                        <!-- 支付宝 -->
-                        <Image Source="/Resource/donate/zhifubao.png" Width="150"/>
-                    </Grid>
+
+            <!-- AI Assistant 作者 -->
+            <GroupBox Header="AI Assistant Author"
+                      Margin="0,0,0,10"
+                      BorderBrush="#2F7AE5"
+                      BorderThickness="1"
+                      Padding="8">
+                <StackPanel Orientation="Vertical" Margin="0,2,0,0">
+                    <TextBlock Text="Name: Jinshuo Liu" HorizontalAlignment="Left"/>
+                    <TextBlock Text="Email: ucabius@ucl.ac.uk" HorizontalAlignment="Left"/>
+                    <TextBlock Text="Supervisor: Prof. Dean Mohamedally &amp; Prof. Graham Roberts" HorizontalAlignment="Left"/>
+                    <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap">
+            <Run Text="Github: " />
+            <Hyperlink NavigateUri="https://github.com/FierceWind1287/ai-textlocator"
+                       RequestNavigate="Hyperlink_RequestNavigate"
+                       Foreground="#2F7AE5"
+                       TextDecorations="{x:Null}">
+                https://github.com/FierceWind1287/ai-textlocator
+            </Hyperlink>
+                    </TextBlock>
                 </StackPanel>
             </GroupBox>
+
+            <!-- 底部一行：左文字 + 右侧两个 logo -->
+            <Grid Margin="0,-10,0,0" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <!-- 左侧占满剩余空间 -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 右侧自适应内容宽度 -->
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧文本 -->
+                <TextBlock Grid.Column="0"
+               Text="UCL IXN project- Collaboration with Intel"
+               FontWeight="SemiBold"
+               FontSize="14"
+               Foreground="#444"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Left"
+               Margin="0,0,8,0"/>
+                
+
+                <!-- 右侧 logo 组 -->
+                <StackPanel Grid.Column="1"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                IsHitTestVisible="False">
+                    <Image Source="/Resource/UCL_logo.png"
+               Height="35" Stretch="Uniform"
+               SnapsToDevicePixels="True"
+               Margin="0,0,8,0"/>
+                    <Image Source="/Resource/intel-logo-icon-png-svg.png"
+               Height="70" Stretch="Uniform"
+               SnapsToDevicePixels="True"/>
+                </StackPanel>
+            </Grid>
+
+
+
         </StackPanel>
     </Grid>
 </Window>

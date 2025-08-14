@@ -1,11 +1,14 @@
 ﻿using log4net;
 using System;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using TextLocator.Core;
 using TextLocator.Message;
 using TextLocator.Util;
+
 
 namespace TextLocator
 {
@@ -44,5 +47,20 @@ namespace TextLocator
             _instance.Topmost = false;
             _instance = null;
         }
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            }
+            catch
+            {
+                // 可选：失败时提示
+                // MessageBox.Show("Unable to open link: " + e.Uri.AbsoluteUri);
+            }
+            e.Handled = true;
+        }
+
     }
+
 }

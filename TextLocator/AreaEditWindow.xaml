@@ -9,19 +9,19 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <!-- 上方内容区域 -->
+            <!-- Upper content area -->
             <RowDefinition Height="Auto" />
-            <!-- 按钮区域 -->
+            <!-- Button area -->
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
-            <!-- 文字提示 -->
+            <!-- Text prompt -->
             <TextBlock Text="Please name the area and choose a folder to save." FontWeight="Bold" Foreground="OrangeRed"/>
-            <!-- 区域名称 -->
+            <!-- Area name -->
             <Grid Margin="0,10,0,0" VerticalAlignment="Center">
                 <TextBlock Text="Area Name: " Margin="0,0,710,0" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                 <TextBox x:Name="AreaName" Margin="100,0,0,0" Width="440" VerticalAlignment="Center" HorizontalAlignment="Left"/>
             </Grid>
-            <!-- 区域名称 -->
+            <!-- Area folder -->
             <Grid Margin="0,10,0,0" VerticalAlignment="Center">
                 <TextBlock Text="Area Folder: " Margin="0,10,710,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                 <ListBox x:Name="AreaFolders" Margin="100,0,0,0" Height="140">
@@ -29,13 +29,13 @@
                         <Grid Width="440" Height="30">
                             <TextBlock Text="C:\Users\{User}\Document" Margin="0,0,0,0" FontSize="14" HorizontalAlignment="Left"/>
                             <Button Content="Delete" Margin="0,0,10,0" Height="20" Background="Red" Foreground="White" HorizontalAlignment="Right"/>
-                            <!-- 分割线 -->
+                            <!-- Separator line -->
                             <Line X1="0" Y1="0" X2="430" Y2="0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="1"></Line>
                         </Grid>
                     </ListBoxItem>
                 </ListBox>
             </Grid>
-            <!-- 搜索文件类型 -->
+            <!-- File types for search -->
             <StackPanel Margin="0,10,0,0" VerticalAlignment="Center">
                 <TextBlock Text="File Types：" Margin="0,10,710,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                 <WrapPanel x:Name="AreaFileTypes" Orientation="Horizontal" >

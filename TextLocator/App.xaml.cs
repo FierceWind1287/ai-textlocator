@@ -25,7 +25,7 @@ using TextLocator.Util;
 namespace TextLocator
 {
     /// <summary>
-    /// App.xaml 的交互逻辑
+    /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application, ISingleInstanceApp
     {
@@ -36,7 +36,7 @@ namespace TextLocator
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr AddDllDirectory(string path);
 
-        // 兼容 Windows 8 以前（AddDllDirectory 不可用）时的 fallback
+        // Fallback for Windows 7 and earlier (AddDllDirectory is not available)
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetDllDirectory(string lpPathName);
 
@@ -48,7 +48,7 @@ namespace TextLocator
             LogManager.GetLogger(MethodBase.GetCurrentMethod()!.DeclaringType);
 
         /// <summary>
-        /// 入口函数
+        /// Entry point
         /// </summary>
         [STAThread]
         public static void Main()
@@ -66,7 +66,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 信号外部命令行参数
+        /// Handle external command line arguments
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
@@ -82,106 +82,106 @@ namespace TextLocator
             return true;
         }
 
-        // 托盘图标
+        // Tray icon
         private static TaskbarIcon _taskbar;
         public static TaskbarIcon Taskbar { get => _taskbar; set => _taskbar = value; }
 
         public App()
         {
-            // 初始化线程池大小
+            // Initialize thread pool size
             AppCore.SetThreadPoolSize();
 
-            // 初始化配置
+            // Initialize configuration
             InitAppConfig();
 
-            // 初始化文件服务引擎
+            // Initialize file service engine
             InitFileInfoServiceEngine();
 
-            // 初始化窗口状态尺寸
+            // Initialize window state size
             CacheUtil.Put("WindowState", WindowState.Normal);
         }
 
         /// <summary>
-        /// 重写OnStartup
+        /// Override OnStartup
         /// </summary>
         /// <param name="e"></param>
         protected override void OnStartup(StartupEventArgs e)
         {
-            /* ①  指定外部 DLL 目录（./extern） */
+            /* ①  Specify external DLL directory (./extern) */
             string externDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "extern");
             SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_USER_DIRS);
             if (AddDllDirectory(externDir) == IntPtr.Zero && Marshal.GetLastWin32Error() == 87)
-                SetDllDirectory(externDir);               // Win7 fallback
+                SetDllDirectory(externDir);               // Windows 7 fallback
 
-            /* ②  初始化 Whisper */
-            string whisperModel = @"E:\Intel\distil-whisper-large";         // ← 改成你的模型路径
+            /* ②  Initialize Whisper */
+            string whisperModel = @"E:\Intel\distil-whisper-large";         // ← Change to your model path
             int rc = WhisperNative.Init(whisperModel, "CPU");
-            if (rc != 0) MessageBox.Show($"Whisper 初始化失败：错误码 {rc}");
+            if (rc != 0) MessageBox.Show($"Whisper initialization failed: error code {rc}");
 
 
-            /* ⑤  继续原来启动流程 */
+            /* ⑤  Continue the normal startup process */
             _taskbar = (TaskbarIcon)FindResource("Taskbar");
             base.OnStartup(e);
         }
 
-        #region 初始化
+        #region Initialization
         /// <summary>
-        /// 初始化AppConfig
+        /// Initialize AppConfig
         /// </summary>
         private void InitAppConfig()
         {
-            // 保存缓存池容量
+            // Save cache pool capacity
             AppUtil.WriteValue("AppConfig", "CachePoolCapacity", AppConst.CACHE_POOL_CAPACITY + "");
 
-            // 每页显示条数
+            // Number of items displayed per page
             AppUtil.WriteValue("AppConfig", "ResultListPageSize", AppConst.MRESULT_LIST_PAGE_SIZE + "");
 
-            // 文件读取超时时间
+            // File read timeout
             AppUtil.WriteValue("AppConfig", "FileContentReadTimeout", AppConst.FILE_CONTENT_READ_TIMEOUT + "");
 
-            // 文件内容摘要切割长度
+            // File content summary cut length
             AppUtil.WriteValue("AppConfig", "FileContentBreviaryCutLength", AppConst.FILE_CONTENT_BREVIARY_CUT_LENGTH + "");
         }
         #endregion
 
-        #region 文件服务引擎注册
+        #region File Service Engine Registration
         /// <summary>
-        /// 初始化文件信息服务引擎
+        /// Initialize file info service engine
         /// </summary>
         private void InitFileInfoServiceEngine()
         {
             try
             {
                 log.Debug("Initialize the file engine factory");
-                // Word服务
+                // Word service
                 FileInfoServiceFactory.Register(FileType.Word, new WordFileService());
-                // Excel服务
+                // Excel service
                 FileInfoServiceFactory.Register(FileType.Excel, new ExcelFileService());
-                // PowerPoint服务
+                // PowerPoint service
                 FileInfoServiceFactory.Register(FileType.PowerPoint, new PowerPointFileService());
-                // PDF服务
+                // PDF service
                 FileInfoServiceFactory.Register(FileType.PDF, new PdfFileService());
-                // HTML或XML服务
+                // HTML or XML service
                 FileInfoServiceFactory.Register(FileType.DOM, new DomFileService());
-                // 纯文本服务
+                // Plain text service
                 FileInfoServiceFactory.Register(FileType.Text, new TxtFileService());
-                // 常用图片服务
+                // Common image service
                 FileInfoServiceFactory.Register(FileType.Image, new NoTextFileService());
-                // 常用压缩包
+                // Common archive service
                 FileInfoServiceFactory.Register(FileType.Archive, new ZipFileService());
-                // 程序员服务
+                // Source code service
                 FileInfoServiceFactory.Register(FileType.SourceCode, new CodeFileService());
             }
             catch (Exception ex)
             {
-                log.Error("File service factory initialization error：" + ex.Message, ex);
+                log.Error("File service factory initialization error: " + ex.Message, ex);
             }
         }
         #endregion
 
-        #region 异常处理
+        #region Exception Handling
         /// <summary>
-        /// 非UI线程未捕获异常处理
+        /// Handle uncaught exception in non-UI thread
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -205,7 +205,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// Task线程内未捕获异常处理
+        /// Handle uncaught exception inside Task thread
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -216,7 +216,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// UI线程未捕获异常处理
+        /// Handle uncaught exception in UI thread
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -224,13 +224,13 @@ namespace TextLocator
         {
             try
             {
-                log.Error("Uncaught exception on the UI thread：" + e.Exception.Message, e.Exception);
-                // 处理完后，我们需要将Handler=true表示已此异常已处理过
+                log.Error("Uncaught exception on the UI thread: " + e.Exception.Message, e.Exception);
+                // After handling, set Handler=true to indicate that the exception has been processed
                 e.Handled = true;
             }
             catch (Exception ex)
             {
-                log.Fatal("A serious error has occurred in the program.：" + ex.Message, ex);
+                log.Fatal("A serious error has occurred in the program: " + ex.Message, ex);
             }
         }
         #endregion

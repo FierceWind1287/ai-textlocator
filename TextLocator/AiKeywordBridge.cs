@@ -8,14 +8,14 @@ namespace TextLocator
     public static class AiKeywordBridge
     {
         /// <summary>
-        /// 调用外部 KeywordService.exe 并返回关键词数组（小写、去重）。
-        /// 兼容 .NET Framework 4.x：不依赖带 CancellationToken 的异步 API。
+        /// Call the external KeywordService.exe and return an array of keywords (in lowercase, without duplicates).
+        /// Compatible with .NET Framework 4.x: Does not rely on asynchronous APIs with CancellationToken.
         /// </summary>
         public static string[] GetKeywords(string userQuery,
                                            string keywordServicePath,
                                            int timeoutMs = 3_000)
         {
-            // 1. 进程启动信息
+            // 1. Process startup information
             var psi = new ProcessStartInfo
             {
                 FileName = keywordServicePath,
@@ -29,21 +29,21 @@ namespace TextLocator
             using (var process = Process.Start(psi))
             {
                 if (process == null)
-                    throw new InvalidOperationException("无法启动 KeywordService 进程。");
+                    throw new InvalidOperationException("Unable to start the KeywordService process.");
 
-                // 2. 异步读取 stdout / stderr
+                // 2. Asynchronous reading of stdout / stderr
                 Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
                 Task<string> errorTask = process.StandardError.ReadToEndAsync();
 
-                // 等待退出（带超时）
+                // Wait to exit (with timeout)
                 bool exited = process.WaitForExit(timeoutMs);
                 if (!exited)
                 {
-                    try { process.Kill(); } catch { /* 忽略 */ }
-                    throw new TimeoutException("KeywordService 未在限定时间内返回。");
+                    try { process.Kill(); } catch { /* ignore */ }
+                    throw new TimeoutException("KeywordService did not return within the specified time.");
                 }
 
-                // 再等读取任务最多 1 秒
+                // Wait to read the task for a maximum of 1 second.
                 Task.WaitAll(new[] { outputTask, errorTask }, 1_000);
 
                 string stdOut = outputTask.Result ?? string.Empty;
@@ -52,13 +52,13 @@ namespace TextLocator
                 if (!string.IsNullOrWhiteSpace(stdErr))
                     Debug.WriteLine($"KeywordService stderr: {stdErr}");
 
-                // 3. 从 stdout 中提取 “Cleaned keywords:” 行
+                // 3. Extract the line 'Cleaned keywords:' from stdout.
                 string cleanedLine = ExtractCleanedKeywordsLine(stdOut);
 
                 if (string.IsNullOrWhiteSpace(cleanedLine))
                     return Array.Empty<string>();
 
-                // 4. 拆分、去重、小写
+                // 4. Split, deduplicate, lowercase
                 string[] keywords = cleanedLine
                     .Split(new[] { ',', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(k => k.Trim().ToLowerInvariant())
@@ -70,7 +70,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 从整段 stdout 文本中提取“Cleaned keywords:”后面的那一行/那部分。
+        /// Extract the line/part after 'Cleaned keywords:' from the entire stdout text.
         /// </summary>
         private static string ExtractCleanedKeywordsLine(string stdout)
         {
@@ -83,7 +83,7 @@ namespace TextLocator
             {
                 string line = lines[i];
 
-                // 同行模式：Cleaned keywords: xxx, yyy, zzz
+                // same row model: Cleaned keywords: xxx, yyy, zzz
                 const string tag = "Cleaned keywords:";
                 if (line.StartsWith(tag, StringComparison.OrdinalIgnoreCase))
                 {
@@ -91,7 +91,7 @@ namespace TextLocator
                     if (!string.IsNullOrWhiteSpace(inline))
                         return inline;
 
-                    // 下一行模式：换行后是真正关键词
+                    // Next row mode: the real keyword comes after the line break.
                     if (i + 1 < lines.Length)
                         return lines[i + 1].Trim();
                 }
@@ -101,7 +101,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 将关键词数组按 ", " 拼接，供 UI 显示。
+        /// Concatenate the keyword array for UI display.
         /// </summary>
         public static string FormatKeywordsForDisplay(string[] keywords)
         {

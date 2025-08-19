@@ -9,7 +9,7 @@
     <Grid Width="430" Height="30">
         <TextBlock x:Name="FolderPath" Text="D:\Desktop files" Margin="0,0,0,0" FontSize="14" HorizontalAlignment="Left"/>
         <Button x:Name="DelButton" Content="Delete" Margin="0,0,10,0" Height="20" Background="OrangeRed" HorizontalAlignment="Right" Foreground="White"/>
-        <!-- 分割线 -->
+        <!-- Separator line -->
         <Line X1="0" Y1="0" X2="430" Y2="0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="1"></Line>
     </Grid>
 </UserControl>

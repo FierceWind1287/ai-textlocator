@@ -1,41 +1,41 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace TextLocator  // ← 确保名字空间跟项目一致
+namespace TextLocator  // ← Ensure the namespace matches your project
 {
     internal static class WhisperNative
     {
-        // -------- DLL 路径 --------
-        // 因为我们在 App.xaml.cs 里已经调用 SetDllDirectory(externPath)
-        // 所以这里只写 DLL 名即可
+        // -------- DLL path --------
+        // Since we already call SetDllDirectory(externPath) in App.xaml.cs,
+        // we only need to specify the DLL name here.
         private const string DllName = "WhisperBridge.dll";
 
-        // -------- 调用 C++ Init(modelDir, device) --------
+        // -------- Call C++ Init(modelDir, device) --------
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         internal static extern int Init(string modelDir, string device);
 
-        // -------- 调用 C++ Transcribe --------
-        // 返回值是 const char*，C# 端用 IntPtr 再转字符串
+        // -------- Call C++ Transcribe --------
+        // The return value is const char*; on the C# side we use IntPtr and convert to string.
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr Transcribe(IntPtr pcm, int len);
 
         /// <summary>
-        /// C# 友好的包装：输入 float[]，输出 string
+        /// C#-friendly wrapper: input float[], output string
         /// </summary>
         internal static string Transcribe(float[] audio)
         {
             int len = audio.Length;
-            // 把 float[] pin 住，获取指针
+            // Pin the float[] so GC will not move it
             var handle = GCHandle.Alloc(audio, GCHandleType.Pinned);
             try
             {
-                IntPtr ptr = handle.AddrOfPinnedObject();
-                IntPtr pStr = Transcribe(ptr, len);
-                return Marshal.PtrToStringAnsi(pStr) ?? string.Empty;
+                IntPtr ptr = handle.AddrOfPinnedObject();    // Get pointer to the array
+                IntPtr pStr = Transcribe(ptr, len);         // Call into the DLL
+                return Marshal.PtrToStringAnsi(pStr) ?? string.Empty; // Convert to string
             }
             finally
             {
-                handle.Free();
+                handle.Free(); // Always release the pinned handle
             }
         }
     }

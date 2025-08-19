@@ -30,41 +30,41 @@ using Rubyer;
 namespace TextLocator
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// The interaction logic of MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// 全部
+        /// all
         /// </summary>
         private RadioButton _radioButtonAll;
         /// <summary>
-        /// 时间戳
+        /// timestamp
         /// </summary>
         private long _timestamp;
         /// <summary>
-        /// 搜索参数
+        /// searchParam
         /// </summary>
         private Entity.SearchParam _searchParam;
         /// <summary>
-        /// 索引构建中
+        /// index building flag
         /// </summary>
         private static volatile bool build = false;
 
         /// <summary>
-        /// 数据模型
+        /// viewModel
         /// </summary>
         private MainViewModel _viewModel = new MainViewModel();
 
-        #region 热键
+        #region hotkey
         /// <summary>
-        /// 当前窗口句柄
+        /// current window handle
         /// </summary>
         private IntPtr _hwnd = new IntPtr();
         /// <summary>
-        /// 记录快捷键注册项的唯一标识符
+        /// registered hotkey settings
         /// </summary>
         private Dictionary<HotKeySetting, int> _hotKeySettings = new Dictionary<HotKeySetting, int>();
         #endregion
@@ -77,70 +77,70 @@ namespace TextLocator
 
         }
 
-        #region 窗口初始化
+        #region window initialization
         /// <summary>
-        /// WPF窗体的资源初始化完成，并且可以通过WindowInteropHelper获得该窗体的句柄用来与Win32交互后调用
+        /// The resource initialization of the WPF window is complete, and the handle of the window can be obtained through WindowInteropHelper for Win32 interaction.
         /// </summary>
         /// <param name="e"></param>
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            // 获取窗体句柄
+            // get the window handle
             _hwnd = new WindowInteropHelper(this).Handle;
             HwndSource hWndSource = HwndSource.FromHwnd(_hwnd);
-            // 添加处理程序
+            // add a hook to the window message processing function
             if (hWndSource != null) hWndSource.AddHook(WndProc);
         }
 
         /// <summary>
-        /// 所有控件初始化完成后调用
+        /// Call after all controls are initialized.
         /// </summary>
         /// <param name="e"></param>
         protected override void OnContentRendered(EventArgs e)
         {
             base.OnContentRendered(e);
-            // 注册热键
+            // register hotkey
             _ = InitHotKey();
         }
 
         /// <summary>
-        /// 加载完毕
+        /// Loading completed
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // 初始化应用信息
+            // Initialize application information
             InitializeAppInfo();
 
-            // 初始化配置文件信息
+            // Initialize configuration file information
             InitializeAppConfig();
 
-            // 初始化文件类型列表
+            // Initialize file type list
             InitializeSearchFileType();
 
-            // 初始化排序类型列表
+            // Initialize the sorting type list
             InitializeSortType();
 
-            // 初始化搜索域列表
+            // Initialize the search domain list
             InitializeSearchRegion();
 
-            // 清理事件（必须放在初始化之后，否则类型筛选的选中Reset可能存在错误）
+            // Cleanup Event
             ResetSearchResult();
 
-            // 检查索引是否存在：如果存在才执行更新检查，不存在的跳过更新检查。
+            // Check if the index exists: if it exists, perform the update check; if it does not exist, skip the update check.
             if (CheckIndexExist(false))
             {
-                // 软件每次启动时执行索引更新逻辑？
+                // The software executes the index update logic each time it starts.
                 IndexUpdateTask();
             }
 
-            // 注册全局热键时间
+            // Register global hotkey time
             HotKeySettingManager.Instance.RegisterGlobalHotKeyEvent += Instance_RegisterGlobalHotKeyEvent;
         }
 
         /// <summary>
-        /// 窗口激活
+        /// Window Activation
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -151,7 +151,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 窗口关闭中，改为隐藏
+        /// The window is closing, changing to hidden.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -163,7 +163,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 尺寸变化
+        /// Size change
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -174,7 +174,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 状态变化
+        /// State change
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -184,36 +184,23 @@ namespace TextLocator
         }
         #endregion
 
-        #region 程序初始化
+        #region Initialize application 
         /// <summary>
-        /// 初始化应用信息
+        /// Initialize application information
         /// </summary>
         private void InitializeAppInfo()
         {
-            // 获取程序版本
+            // Get program version
             Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-			
-			// 设置标题
+
+            // Set title
             this.Title = string.Format("{0} v{1} (Released)", this.Title, version);
         }
 
         /// <summary>
-        /// 初始化排序类型列表
+        /// Initialize the sorting type list
         /// </summary>
-        //private void InitializeSortType()
-        //{
-        //    TaskTime taskTime = TaskTime.StartNew();
-        //    SortOptions.Items.Clear();
 
-        //    // 🆕 原创：用包装类替代直接添加 enum
-        //    SortOptions.Items.Add(new SortOptionItem { DisplayName = "Default Order", Value = SortType.Default });
-        //    SortOptions.Items.Add(new SortOptionItem { DisplayName = "By Date (ASC)", Value = SortType.Date_ASC });
-        //    SortOptions.Items.Add(new SortOptionItem { DisplayName = "By Date (DESC)", Value = SortType.Date_DESC });
-        //    SortOptions.Items.Add(new SortOptionItem { DisplayName = "By Size (ASC)", Value = SortType.Size_ASC });
-        //    SortOptions.Items.Add(new SortOptionItem { DisplayName = "By Size (DESC)", Value = SortType.Size_DESC });
-
-        //    log.Debug("InitializeSortType Duration：" + taskTime.ConsumeTime + ".");
-        //}
 
         private void InitializeSortType()
         {
@@ -229,21 +216,21 @@ namespace TextLocator
     };
 
             SortOptions.ItemsSource = sortOptions;
-            SortOptions.SelectedIndex = 0;  // 默认选第一个
+            SortOptions.SelectedIndex = 0;  // choose the first item by default
 
             log.Debug("InitializeSortType Duration：" + taskTime.ConsumeTime + ".");
         }
 
 
         /// <summary>
-        /// 初始化搜索域
+        /// Initialize search domain
         /// </summary>
         private void InitializeSearchRegion()
         {
             TaskTime taskTime = TaskTime.StartNew();
             SearchScope.Items.Clear();
 
-            // 显示用包装类替代 enum 直接显示
+            // Use packaging classes to replace enum
             SearchScope.Items.Add(new SearchRegionItem { DisplayName = "File Name and Content", Value = SearchRegion.FileNameAndContent });
             SearchScope.Items.Add(new SearchRegionItem { DisplayName = "File Name Only", Value = SearchRegion.FileNameOnly });
             SearchScope.Items.Add(new SearchRegionItem { DisplayName = "Content Only", Value = SearchRegion.ContentOnly });
@@ -258,14 +245,11 @@ namespace TextLocator
             {
                 SearchRegion selectedValue = selectedRegion.Value;
 
-                // ✅ 你可以在这里根据 selectedValue 做一些处理
+                
                 log.Debug("Selected search region: " + selectedValue.ToString());
 
-                // 如果你需要在别的地方用这个值，也可以存成字段：
-                // this.CurrentSearchRegion = selectedValue;
             }
 
-            // 原来的逻辑
             BeforeSearch();
         }
 
@@ -273,17 +257,17 @@ namespace TextLocator
 
 
         /// <summary>
-        /// 初始化文件类型过滤器列表
+        /// Initialize the file type filter list
         /// </summary>
         private void InitializeSearchFileType()
         {
             TaskTime taskTime = TaskTime.StartNew();
-            // 文件类型筛选下拉框数据初始化
+            // File type filter dropdown data initialization
             SearchFileType.Children.Clear();
-            // 遍历文件类型枚举
+            // Traverse file type enumeration
             foreach (FileType fileType in Enum.GetValues(typeof(FileType)))
             {
-                // 构造UI元素
+                // Construct UI elements
                 RadioButton radioButton = new RadioButton()
                 {
                     GroupName = "SearchFileType",
@@ -301,25 +285,25 @@ namespace TextLocator
                 radioButton.Checked += FileType_Checked;
                 SearchFileType.Children.Add(radioButton);
 
-                // 缓存全部，用于还原到默认值（因为默认选中全部）
+                // Cache all, used to restore to default values
                 if (fileType == FileType.All)
                 {
                     _radioButtonAll = radioButton;
                 }
             }
-            // 搜索筛选条件直接读取的当前值，初始化时默认赋值全部。其他选项修改时会更改此值
+            // The current value directly read from the search filter conditions is initialized with the default value of all. 
             SearchFileType.Tag = FileType.All;
             log.Debug("InitializeSearchFileTypes Duration：" + taskTime.ConsumeTime + "。");
         }
 
         /// <summary>
-        /// 初始化配置文件信息
+        /// Initialize configuration file information
         /// </summary>
         public void InitializeAppConfig()
         {
             TaskTime taskTime = TaskTime.StartNew();
 
-            // 启用的搜索区域信息显示
+            // Show enabled search area information
             List<Entity.AreaInfo> enableAreaInfos = AreaUtil.GetEnableAreaInfoList();
             string enableAreaNames = "";
             string enableAreaNameDescs = "";
@@ -331,7 +315,7 @@ namespace TextLocator
             this.EnableAreaInfos.Text = enableAreaNames.Substring(0, enableAreaNames.Length - 1);
             this.EnableAreaInfos.ToolTip = enableAreaNameDescs.Substring(0, enableAreaNameDescs.Length - 2);
 
-            // 未启用的搜索区域信息显示
+            // Show disabled search area information
             List<Entity.AreaInfo> disableAreaInfos = AreaUtil.GetDisableAreaInfoList();
             string disableAreaNames = "";
             string disableAreaNameDescs = "";
@@ -344,9 +328,9 @@ namespace TextLocator
             if (!string.IsNullOrEmpty(disableAreaNameDescs))
             {
                 this.DisableAreaInfos.ToolTip = disableAreaNameDescs.Substring(0, disableAreaNameDescs.Length - 2);
-            }            
+            }
 
-            // 读取分页每页显示条数
+            // Read the number of items displayed per page in pagination.
             if (string.IsNullOrEmpty(AppUtil.ReadValue("AppConfig", "ResultListPageSize", "")))
             {
                 AppUtil.WriteValue("AppConfig", "ResultListPageSize", AppConst.MRESULT_LIST_PAGE_SIZE + "");
@@ -357,9 +341,9 @@ namespace TextLocator
 
         #endregion
 
-        #region 热键注册
+        #region hotkey registration
         /// <summary>
-        /// 通知注册系统快捷键事件处理函数
+        /// Notify the registration system shortcut key event handling function
         /// </summary>
         /// <param name="hotKeyModelList"></param>
         /// <returns></returns>
@@ -371,20 +355,20 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 初始化注册快捷键
+        /// Initialize registration shortcut key
         /// </summary>
-        /// <param name="hotKeyModelList">待注册热键的项</param>
-        /// <returns>true:保存快捷键的值；false:弹出设置窗体</returns>
+        /// <param name="hotKeyModelList">Item to register hotkeys</param>
+        /// <returns>true: Save the value of the shortcut key; false: Pop up the settings window.</returns>
         private async Task<bool> InitHotKey(ObservableCollection<HotKeyModel> hotKeyModelList = null)
         {
             var list = hotKeyModelList ?? HotKeySettingManager.Instance.LoadDefaultHotKey();
-            // 注册全局快捷键
+            // Register global hotkeys
             string failList = HotKeyHelper.RegisterGlobalHotKey(list, _hwnd, out _hotKeySettings);
             if (string.IsNullOrEmpty(failList))
                 return true;
 
             var result = await MessageCore.ShowMessageBox(string.Format("The following hotkeys could not be registered: \r\n\r\n{0}Would you like to change these hotkeys?", failList), "Confirmation", MessageBoxButton.YesNo);
-            // 弹出热键设置窗体
+            // Pop up the settings window
             var win = HotkeyWindow.CreateInstance();
             if (result == MessageBoxResult.Yes)
             {
@@ -403,14 +387,14 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 窗体回调函数，接收所有窗体消息的事件处理函数
+        /// Window callback function, an event handler that receives all window messages.
         /// </summary>
-        /// <param name="hWnd">窗口句柄</param>
-        /// <param name="msg">消息</param>
-        /// <param name="wideParam">附加参数1</param>
-        /// <param name="longParam">附加参数2</param>
-        /// <param name="handled">是否处理</param>
-        /// <returns>返回句柄</returns>
+        /// <param name="hWnd">Window handle</param>
+        /// <param name="msg">information</param>
+        /// <param name="wideParam">Additional parameter 1</param>
+        /// <param name="longParam">Additional parameter 2</param>
+        /// <param name="handled">processed or not</param>
+        /// <returns>return handle</returns>
         private IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wideParam, IntPtr longParam, ref bool handled)
         {
             var hotKeySetting = new HotKeySetting();
@@ -418,7 +402,7 @@ namespace TextLocator
             {
                 case HotKeyManager.WM_HOTKEY:
                     int sid = wideParam.ToInt32();
-                    // 显示
+                    // show
                     if (sid == _hotKeySettings[HotKeySetting.Show])
                     {
                         hotKeySetting = HotKeySetting.Show;
@@ -426,31 +410,31 @@ namespace TextLocator
                         this.Show();
                         this.WindowState = WindowState.Normal;
                     }
-                    // 隐藏
+                    // Hide
                     else if (sid == _hotKeySettings[HotKeySetting.Hide])
                     {
                         hotKeySetting = HotKeySetting.Hide;
                         this.Hide();
                     }
-                    // 清空
+                    // clean
                     else if (sid == _hotKeySettings[HotKeySetting.Clear])
                     {
                         hotKeySetting = HotKeySetting.Clear;
                         ResetSearchResult();
                     }
-                    // 退出
+                    // exit
                     else if (sid == _hotKeySettings[HotKeySetting.Exit])
                     {
                         hotKeySetting = HotKeySetting.Exit;
                         AppCore.Shutdown();
                     }
-                    // 上一项
+                    // previous
                     else if (sid == _hotKeySettings[HotKeySetting.Previous])
                     {
                         hotKeySetting = HotKeySetting.Previous;
                         Switch2Preview(HotKeySetting.Previous);
                     }
-                    // 下一项
+                    // next
                     else if (sid == _hotKeySettings[HotKeySetting.Next])
                     {
                         hotKeySetting = HotKeySetting.Next;
@@ -464,15 +448,15 @@ namespace TextLocator
         }
         #endregion
 
-        #region 关键词搜索
+        #region Keyword search
         /// <summary>
-        /// 搜索
+        /// search
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            // 获取搜索关键词列表
+            // Get the list of search keywords
             List<string> keywords = GetSearchTextKeywords();
             if (keywords.Count <= 0)
             {
@@ -480,27 +464,27 @@ namespace TextLocator
                 return;
             }
 
-            // ---- 搜索按钮时，下拉框和其他筛选条件全部恢复默认值
-            // 取消精确检索
+            //---- When the search button is clicked, the dropdown box and all other filter conditions revert to their default values.
+            // Cancel precise search
             PreciseRetrieval.IsChecked = false;
-            // 取消匹配全词
+            // Cancel matching the whole word
             MatchWords.IsChecked = false;
 
-            // 全部文件类型
+            // All file types
             ToggleButtonAutomationPeer toggleButtonAutomationPeer = new ToggleButtonAutomationPeer(_radioButtonAll);
             IToggleProvider toggleProvider = toggleButtonAutomationPeer.GetPattern(PatternInterface.Toggle) as IToggleProvider;
             toggleProvider.Toggle();
 
-            // 默认排序
+            // Default sorting
             SortOptions.SelectedIndex = 0;
-            // 文件名和内容
+            // File name and content
             // SearchScope.SelectedIndex = 0;
 
             BeforeSearch();
         }
 
         /// <summary>
-        /// 关键词文本框回车搜索
+        /// Press Enter in the keyword text box to search
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -508,61 +492,61 @@ namespace TextLocator
         {
             if (e.Key == Key.Enter)
             {
-                // ---- 光标移除文本框
+                // ---- mouse move focus out of the text box
                 SearchText.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
 
-                // ---- 搜索按钮时，下拉框和其他筛选条件全部恢复默认值
-                // 取消精确检索
+                // ---- When the search button is clicked, the dropdown box and all other filter conditions revert to their default values.
+                // Cancel precise search
                 PreciseRetrieval.IsChecked = false;
-                // 取消匹配全词
+                // Cancel matching the whole word
                 MatchWords.IsChecked = false;
 
-                // 全部文件类型
+                // All file types
                 ToggleButtonAutomationPeer toggleButtonAutomationPeer = new ToggleButtonAutomationPeer(_radioButtonAll);
                 IToggleProvider toggleProvider = toggleButtonAutomationPeer.GetPattern(PatternInterface.Toggle) as IToggleProvider;
                 toggleProvider.Toggle();
 
-                // 默认排序
+                // Default sorting
                 SortOptions.SelectedIndex = 0;
-                // 文件名和内容
+                // File name and content
                 // SearchScope.SelectedIndex = 0;
 
                 BeforeSearch();
 
-                // 光标聚焦
+                // mouse focus
                 SearchText.Focus();
             }
         }
 
         /// <summary>
-        /// 文本内容变化时
+        /// when text content changes
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void SearchText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // 如果文本为空则隐藏清空按钮，如果不为空则显示清空按钮
+            // If the textblock is empty, hide the clear button; if not, show the clear button.
             this.CleanButton.Visibility = this.SearchText.Text.Length > 0 ? Visibility.Visible : Visibility.Hidden;
-            // 文本框颜色
+            // Textbox color
             SearchTextBorder.BorderBrush = new SolidColorBrush(this.SearchText.Text.Length > 0 ? Colors.Green : (Color)ColorConverter.ConvertFromString("#2196f3"));
         }
 
         /// <summary>
-        /// 搜索前
+        /// before search
         /// </summary>
-        /// <param name="page">指定页</param>
+        /// <param name="page">Designated page</param>
         private void BeforeSearch(int page = 1)
         {
-            // 1、---- 搜索信息预处理
-            // 还原分页count
+            // 1、---- Search information preprocessing
+            // Restore pagination count
             if (page != _viewModel.PageIndex)
             {
                 _viewModel.PageIndex = page;
-                // 设置分页标签总条数
+                // Set the total number of pagination tags
                 _viewModel.TotalCount = 0;
             }
 
-            // 获取搜索关键词列表
+            // Get the list of search keywords
             List<string> keywords = GetSearchTextKeywords();
             if (keywords.Count <= 0)
             {
@@ -570,28 +554,28 @@ namespace TextLocator
             }
 
 
-            // 2、---- 预览信息还原
-            // 预览区打开文件和文件夹标记清空
+            // 2、---- Preview information restoration
+            // clean tag
             OpenFile.Tag = null;
             OpenFolder.Tag = null;
 
-            // 预览文件名清空
+            // clean preview file name
             PreviewFileName.Text = "";
 
-            // 预览文件内容清空
+            // clean preview file content
             PreviewFileContent.Document = null;
 
-            // 预览图标清空
+            // clean preview icon
             PreviewImage.Source = null;
 
-            // 预览文件类型图标清空
+            // clean preview file type icon
             PreviewFileTypeIcon.Source = null;
 
-            // 预览切换标记清空
+            //  clean switch preview tag
             SwitchPreview.Tag = null;
 
 
-            // 3、---- 生成本次搜索时间戳
+            // 3、---- Generate the timestamp for this search.
             _timestamp = Convert.ToInt64((DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalMilliseconds);
 
             SortOptionItem selectedSortItem = (SortOptionItem)SortOptions.SelectedItem;
@@ -601,16 +585,16 @@ namespace TextLocator
             {
                 Keywords = keywords,
                 FileType = (FileType)SearchFileType.Tag,
-                SortType = selectedSortItem.Value,                   // ✅ 用包装类提取 SortType 枚举值
+                SortType = selectedSortItem.Value,                   // Extract SortType enumeration value
                 IsPreciseRetrieval = (bool)PreciseRetrieval.IsChecked,
                 IsMatchWords = (bool)MatchWords.IsChecked,
-                SearchRegion = selectedSearchRegion.Value,           // ✅ 用包装类提取 SearchRegion 枚举值
+                SearchRegion = selectedSearchRegion.Value,           // Extract SearchRegion enumeration value
                 PageSize = _viewModel.PageSize,
                 PageIndex = _viewModel.PageIndex
             };
 
 
-            // 5、---- 搜索
+            // 5、---- search
             Search(
                 _timestamp,
                 _searchParam
@@ -618,10 +602,10 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 搜索
+        /// search
         /// </summary>
-        /// <param name="timestamp">时间戳，用于校验为同一子任务；时间戳不相同表名父任务结束，子任务跳过执行</param>
-        /// <param name="searchParam">搜索条件</param>
+        /// <param name="timestamp">Timestamp used to verify the same subtask; if the timestamps are different, it indicates that the parent task has ended and the subtask is skipped.</param>
+        /// <param name="searchParam">search condition</param>
         private void Search(long timestamp, Entity.SearchParam searchParam)
         {
             if (!CheckIndexExist())
@@ -636,16 +620,16 @@ namespace TextLocator
             {
                 try
                 {
-                    // 1、---- 清空搜索结果列表
+                    // 1、---- Clear the search results list
                     Dispatcher.Invoke(() =>
                     {
                         this.SearchResultList.Items.Clear();
                     });
 
-                    // 2、---- 查询列表（参数，消息回调）
+                    // 2、---- Query List (Parameters, Message Callback)
                     Entity.SearchResult searchResult = IndexCore.Search(searchParam, ShowStatus);
 
-                    // 验证列表数据
+                    // Verify list data
                     if (null == searchResult || searchResult.Results.Count <= 0)
                     {
                         MessageCore.ShowWarning("No results found. Please adjust your search criteria.");
@@ -653,7 +637,7 @@ namespace TextLocator
                         return;
                     }
 
-                    // 3、---- 遍历结果
+                    // 3、---- Traversal result
                     int index = 1;
                     foreach (Entity.FileInfo fileInfo in searchResult.Results)
                     {
@@ -668,7 +652,7 @@ namespace TextLocator
                         });
                     }
 
-                    // 4、---- 分页总数、显示预览列表分页信息
+                    // 4、---- Total number of pages, preview list paging information
                     _viewModel.TotalCount = searchResult.Total;
                     _viewModel.PreviewPage = string.Format("0/{0}", searchResult.Results.Count);
                     _viewModel.PreviewSwitchVisibility = searchResult.Total > 0 ? Visibility.Visible : Visibility.Hidden;
@@ -688,7 +672,7 @@ namespace TextLocator
         #endregion
 
         #region 数据分页
-        // 切换页码
+        // Switch page number
         private void PageBar_PageIndexChanged(object sender, RoutedPropertyChangedEventArgs<int> e)
         {
             log.Debug($"pageIndex : {e.OldValue} => {e.NewValue}");
@@ -704,9 +688,9 @@ namespace TextLocator
         }
         #endregion
 
-        #region 列表排序
+        #region List sorting
         /// <summary>
-        /// 排序选中
+        /// Sort selected
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -716,9 +700,9 @@ namespace TextLocator
         }
         #endregion
 
-        #region 结果清空
+        #region Clear results
         /// <summary>
-        /// 清空按钮
+        /// clear btn
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -728,77 +712,77 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 清理查询结果
+        /// Clear query results
         /// </summary>
         private void ResetSearchResult()
         {
-            // -------- 搜索框
-            // 先清空搜索框
+            // -------- search box
+            // clear the search box.
             SearchText.Text = "";
-            // 光标移除文本框
+            // mouse move out of the text box
             SearchText.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-            // 光标聚焦
+            // mouse focus
             SearchText.Focus();
 
-            // -------- 筛选条件
-            // 文件类型筛选取消选中
+            // -------- Filter criteria
+            // Cancel the selection of file type filter
             ToggleButtonAutomationPeer toggleButtonAutomationPeer = new ToggleButtonAutomationPeer(_radioButtonAll);
             IToggleProvider toggleProvider = toggleButtonAutomationPeer.GetPattern(PatternInterface.Toggle) as IToggleProvider;
             toggleProvider.Toggle();
 
-            // 取消精确检索
+            // Cancel precise search
             PreciseRetrieval.IsChecked = false;
-            // 取消匹配全词
+            // Cancel matching the whole word
             MatchWords.IsChecked = false;
 
-            // 排序类型切换为默认
+            // Switch the sorting type to default order
             SortOptions.SelectedIndex = 0;
-            // 文件名和内容
+            // filename and content
             SearchScope.SelectedIndex = 0;
 
-            // -------- 搜索结果列表
-            // 搜索结果列表清空
+            // -------- Search Results List
+            // Clear the search results list
             SearchResultList.Items.Clear();
 
-            // -------- 右侧预览区
-            // 右侧预览区，打开文件和文件夹标记清空
+            // -------- Right preview area
+            // clear tag
             OpenFile.Tag = null;
             OpenFolder.Tag = null;
 
-            // 预览文件名清空
+            //clear all
             PreviewFileName.Text = "";
 
-            // 预览文件内容清空
+            
             PreviewFileContent.Document = null;
 
-            // 预览图片清空
+            
             PreviewImage.Source = null;
 
-            // 预览文件类型图标清空
+            
             PreviewFileTypeIcon.Source = null;
 
-            // -------- 分页标签
-            // 还原为第一页
+            // -------- Pagination label
+            // Restore to the first page
             _viewModel.PageIndex = 1;
-            // 设置分页标签总条数
+            // Set the total number of entries for pagination
             _viewModel.TotalCount = 0;
 
-            // -------- 快捷标签
-            // 隐藏上一个和下一个切换面板
+            // -------- Quick Labels
+            // Hide the previous and next panels
             this.SwitchPreview.Visibility = Visibility.Collapsed;
 
-            // -------- 搜索参数
+            // -------- searchparam
             _searchParam = null;
 
-            // -------- 状态栏
-            // 工作状态更新为就绪
+            // -------- statud
+            // update status to ready
             ShowStatus("Ready");
         }
         #endregion
 
-        #region 数据列表
+        #region Data list
         /// <summary>
-        /// 列表项被选中事件
+        /// List item selection event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -809,28 +793,28 @@ namespace TextLocator
                 return;
             }
 
-            // 预览切换索引标记
+            // Preview switch index tag
             this.SwitchPreview.Tag = SearchResultList.SelectedIndex;
-            // 显示预览分页信息
+            // Display preview pagination information
             _viewModel.PreviewPage = String.Format("{0}/{1}", this.SearchResultList.SelectedIndex + 1, SearchResultList.Items.Count);
 
-            // 手动GC
+            // GC manually
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
             FileInfoItem infoItem = SearchResultList.SelectedItem as FileInfoItem;
             Entity.FileInfo fileInfo = infoItem.Tag as Entity.FileInfo;
 
-            // 根据文件类型显示图标
+            // Display icons according to file type
             PreviewFileTypeIcon.Source = FileUtil.GetFileIcon(fileInfo.FileType);
             PreviewFileName.Text = fileInfo.FileName;
             PreviewFileContent.Document = null;
 
-            // 绑定打开文件和打开路径的Tag
+            // Bind the tag for open file and open path
             OpenFile.Tag = fileInfo.FilePath;
             OpenFolder.Tag = fileInfo.FilePath.Substring(0, fileInfo.FilePath.LastIndexOf("\\"));
 
-            // 图片文件
+            // image file 
             if (FileType.Image == FileTypeUtil.GetFileType(fileInfo.FilePath))
             {
                 PreviewFileContent.Visibility = Visibility.Hidden;
@@ -869,18 +853,17 @@ namespace TextLocator
             {
                 PreviewImage.Visibility = Visibility.Hidden;
                 PreviewFileContent.Visibility = Visibility.Visible;
-                // 文件内容预览
+                // file content preview
                 Task.Factory.StartNew(() =>
                 {
                     try
                     {
-                        // 方案一：通过工厂接口读取文档内容（为提高预览速度，现已放弃） -> FileInfoServiceFactory.GetFileContent(fileInfo.FilePath, true);
-                        // 方案二：创建索引时写入内容到索引，预览时直接读取使用。
+                        
                         string content = fileInfo.Preview;
 
                         Dispatcher.InvokeAsync(() =>
                         {
-                            // 预览摘要启用
+                            // Enable preview summary
                             if (AppConst.ENABLE_PREVIEW_SUMMARY)
                             {
                                 FlowDocument document = FileContentUtil.GetHitBreviaryFlowDocument(content, fileInfo.Keywords, Colors.Red);
@@ -889,16 +872,16 @@ namespace TextLocator
                             }
                             else
                             {
-                                // 填充数据
+                                // fill flow document
                                 FileContentUtil.FillFlowDocument(PreviewFileContent, content, new SolidColorBrush(Colors.Black));
-                                // 默认滚动到第一页
+                                // go to the first page by default
                                 PreviewFileContent.CanGoToPage(1);
                                 ScrollViewer sourceScrollViewer = PreviewFileContent.Template.FindName("PART_ContentHost", PreviewFileContent) as ScrollViewer;
                                 if (sourceScrollViewer != null)
                                 {
                                     sourceScrollViewer.ScrollToTop();
                                 }
-                                // 关键词高亮
+                                // highlight keywords
                                 FileContentUtil.FlowDocumentHighlight(
                                     PreviewFileContent,
                                     Colors.Red,
@@ -916,10 +899,10 @@ namespace TextLocator
         }
         #endregion
 
-        #region 功能事件
+        #region functions event
 
         /// <summary>
-        /// 搜索域切换事件
+        /// switch search scope
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -928,7 +911,7 @@ namespace TextLocator
         //    BeforeSearch();
         //}
         /// <summary>
-        /// 文件类型过滤器选中事件
+        /// file type filter 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -946,7 +929,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 匹配全词
+        /// match whole words
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -956,7 +939,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 参数设置
+        /// Parameter settings
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -976,7 +959,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 正则工具
+        /// Regex tool 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -999,7 +982,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 优化按钮
+        /// Optimize button
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1021,7 +1004,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 重建按钮
+        /// Rebuilt btn
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1057,7 +1040,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 搜索区双击事件
+        /// double click search area
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1067,13 +1050,13 @@ namespace TextLocator
             areaDialog.Owner = this;
             areaDialog.Topmost = true;
             areaDialog.ShowDialog();
-            
-			// 不管是否修改都刷新
+
+            // Refresh whether modified or not.
             InitializeAppConfig();
         }
 
         /// <summary>
-        /// 上一个
+        /// previous
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1083,7 +1066,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 下一个
+        /// next
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1093,54 +1076,43 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 切换预览，next为true，下一个；next为false，上一个
+        /// Switch preview, if next is true, go to the next one; if next is false, go to the previous one.
         /// </summary>
         /// <param name="next"></param>
         private void Switch2Preview(HotKeySetting setting)
         {
-            // 当前索引 = 预览标记不为空 ? 使用标记 ： 默认值0
+            // Current index = preview marker is not empty ? use tag : default value 0
             int index = this.SwitchPreview.Tag != null ? int.Parse(this.SwitchPreview.Tag + "") : -1;
 
-            // 搜索结果列表为空时，不能执行切换
+            // Cannot switch when the search result list is empty.
             if (this.SearchResultList.Items.Count <= 0)
             {
                 return;
             }
 
-            // 下一个
+            // next
             if (setting == HotKeySetting.Next && index < this.SearchResultList.Items.Count)
             {
                 this.SearchResultList.SelectedIndex = index + 1;
             }
-            // 上一个
+            // previous
             else if (setting == HotKeySetting.Previous && index > 0)
             {
                 this.SearchResultList.SelectedIndex = index - 1;
             }
 
-            // 显示分页信息
+            // Display pagination information
             _viewModel.PreviewPage = String.Format("{0}/{1}", this.SearchResultList.SelectedIndex + 1, SearchResultList.Items.Count);
         }
         #endregion
 
-        #region 辅助方法
+        #region Auxiliary method
         /// <summary>
-        /// 检查索引是否需要更新
+        /// Check if the index needs to be updated
         /// </summary>
         private void IndexUpdateTask()
         {
-            // 方案一：定时器
-            /*if (AppConst.INDEX_UPDATE_TASK_INTERVAL <= 5)
-                AppConst.INDEX_UPDATE_TASK_INTERVAL = 5;
-
-            System.Timers.Timer timer = new System.Timers.Timer();
-            timer.Interval = AppConst.INDEX_UPDATE_TASK_INTERVAL * 60 * 1000;
-            timer.Elapsed += Timer_Elapsed;
-            timer.AutoReset = true;
-            timer.Enabled = true;
-            timer.Start();*/
-
-            // 方案二：线程
+          
             Task.Factory.StartNew(() =>
             {
                 try
@@ -1160,8 +1132,7 @@ namespace TextLocator
 
                             BuildIndex(false, true);
                         }
-
-                        // 修复bug容错处理
+                        //fault tolerance
                         if (AppConst.INDEX_UPDATE_TASK_INTERVAL <= 5)
                             AppConst.INDEX_UPDATE_TASK_INTERVAL = 5;
 
@@ -1176,7 +1147,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 定时器执行逻辑
+        /// Timer execution logic
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1197,7 +1168,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 检查索引是否存在
+        /// Check if the index exists
         /// </summary>
         /// <returns></returns>
         private bool CheckIndexExist(bool showWarning = true)
@@ -1214,31 +1185,31 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 构建索引
+        /// construct index
         /// </summary>
-        /// <param name="isRebuild">是否重建</param>
-        /// <param name="isBackground">是否后台执行，默认前台执行</param>
+        /// <param name="isRebuild">rebuilt or not</param>
+        /// <param name="isBackground">Whether to execute in the background, default is foreground execution.</param>
         private void BuildIndex(bool isRebuild, bool isBackground = false)
         {
             try
             {
-                // 提示语
+                // prompt
                 string tag = isRebuild ? "Rebuild" : "Update";
 
-                // 1、-------- 定义总数
-                // 文件总数
+                // 1、-------- define the total num
+                // Total number of documents
                 int fileTotalCount = 0;
-                // 更新总数
+                // Total number of updated documents
                 int updateTotalCount = 0;
-                // 删除总数
+                // Total number of deleted documents
                 int deleteTotalCount = 0;
-                // 错误总数
+                // Total number of error documents
                 int errorTotalCount = 0;
 
-                // 总任务消耗时间
+                // Total task consumption time
                 var totalTaskMark = TaskTime.StartNew();
 
-                // 2、-------- 遍历搜索区
+                // 2、--------traversal Search area 
                 List<Entity.AreaInfo> areaInfos = AreaUtil.GetEnableAreaInfoList();
                 int areaInfosCount = areaInfos.Count;
                 for (int i = 0; i < areaInfosCount; i++)
@@ -1247,37 +1218,38 @@ namespace TextLocator
 
                     var singleTaskMark = TaskTime.StartNew();
 
-                    // 不同区域，索引分开记录
+                    // Different areas have separate records of indexes.
                     string areaIdIndex = areaInfo.AreaId + "Index";
 
-                    // 重建则删除全部标记
+                    // Rebuilding will remove all markers.
                     if (isRebuild)
                     {
-                        // 重建时，删除全部标记
+                        
                         AppUtil.DeleteSection(areaIdIndex);
                     }
 
-                    // 2.1、-------- 开始获取文件列表
+                    // 2.1、-------- Start obtaining the file list
                     string msg = string.Format("Search area【{0}】，starting to scan files...", areaInfo.AreaName);
                     log.Info(msg);
                     ShowStatus(msg);
 
-                    // 定义全部文件列表
+                    // Define all files list
                     List<string> allFilePaths = new List<string>();
-                    // 定义更新文件列表
+                    // Define updated files list
                     List<string> updateFilePaths = new List<string>();
-                    // 定义删除文件列表
+                    // Define deleted files list
                     List<string> deleteFilePaths = new List<string>();
 
-                    // 2.2、-------- 获取支持的文件类型后缀（根据不同区域配置的支持文件类型查找对应的文件列表）
+                    // 2.2、-------- Obtain the supported file type extensions
+                    // (find the corresponding file list based on the supported file types configured for different regions)
                     Regex fileExtRegex = RegexUtil.BuildRegex(@"^.+\.(" + FileTypeUtil.ConvertToFileTypeExts(areaInfo.AreaFileTypes, "|") + ")$"); //new Regex(@"^.+\.(" + FileTypeUtil.ConvertToFileTypeExts(areaInfo.AreaFileTypes, "|") + ")$");
 
                     var scanTaskMark = TaskTime.StartNew();
-                    // 扫描需要建立索引的文件列表
+                    // Scan the list of files that need to be indexed.
                     foreach (string s in areaInfo.AreaFolders)
                     {
                         log.Info("Catalog：" + s);
-                        // 获取文件信息列表
+                        // Get file information list
                         FileUtil.GetAllFiles(allFilePaths, s, fileExtRegex);
                     }
 
@@ -1286,12 +1258,12 @@ namespace TextLocator
                     ShowStatus(msg);
 
                     var analysisTaskMark = TaskTime.StartNew();
-                    // 2.3、-------- 获取需要删除的文件列表
+                    // 2.3、-------- Obtain the list of files to be deleted
                     if (AppUtil.ReadSectionList(areaIdIndex) != null)
                     {
                         foreach (string filePath in AppUtil.ReadSectionList(areaIdIndex))
                         {
-                            // 不存在，则表示文件已删除
+                            // If it does not exist, it means the file has been deleted.
                             if (!allFilePaths.Contains(filePath))
                             {
                                 deleteFilePaths.Add(filePath);
@@ -1300,22 +1272,23 @@ namespace TextLocator
                         }
                     }
 
-                    // 2.4、-------- 如果是更新操作，判断文件格式是否变化 -> 判断文件更新时间变化找到最终需要更新的文件列表
-                    // 更新是才需要校验，重建是直接跳过
+                    // 2.4、-------- If it is an update operation, determine whether the file format has changed ->
+                    // Check for changes in file update time to find the final list of files that need to be updated.
+                    // Update requires verification, while reconstruction skips directly.
                     if (!isRebuild)
                     {
-                        // 更新：需要更新的文件列表
+                        // Update: List of files that need to be updated
                         foreach (string filePath in allFilePaths)
                         {
                             try
                             {
                                 FileInfo fileInfo = new FileInfo(filePath);
-                                // 当前文件修改时间
+                                // Current file modification time
                                 string lastWriteTime = fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss.ffff");
-                                // 上次索引时文件修改时间标记
+                                // Last modified time tag of the file during the indexation.
                                 string lastWriteTimeTag = AppUtil.ReadValue(areaIdIndex, filePath);
 
-                                // 文件修改时间不一致，说明文件已修改
+                                // The file modification time is different, indicating that the file has been modified.
                                 if (!lastWriteTime.Equals(lastWriteTimeTag))
                                 {
                                     updateFilePaths.Add(filePath);
@@ -1326,7 +1299,7 @@ namespace TextLocator
                     }
                     else
                     {
-                        // 重建：全部文件列表
+                        // Rebuilt: all file list
                         updateFilePaths.AddRange(allFilePaths);
                     }
 
@@ -1334,7 +1307,7 @@ namespace TextLocator
                     log.Info(msg);
                     ShowStatus(msg);
 
-                    // 2.5、-------- 验证扫描文件列表是否为空（如果是更新操作，判断文件格式是否变化 -> 判断文件更新时间变化找到最终需要更新的文件列表）
+                    // 2.5、-------- Verify whether the scanned file list is empty
                     if (updateFilePaths.Count <= 0 && deleteFilePaths.Count <= 0)
                     {
                         build = false;
@@ -1344,10 +1317,10 @@ namespace TextLocator
                         continue;
                     }
 
-                    // 后台执行时修改为最小线程单位，反之恢复为系统配置线程数
+                    // When executed in the background, change to the minimum thread unit, and restore to the system configured number of threads otherwise.
                     AppCore.SetThreadPoolSize(!isBackground);
 
-                    // 2.6、-------- 创建索引方法
+                    // 2.6、-------- Create index method
                     Entity.CreareIndexParam creareParam = new Entity.CreareIndexParam()
                     {
                         AreaId = areaInfo.AreaId,
@@ -1360,30 +1333,30 @@ namespace TextLocator
                     };
                     int errorCount = IndexCore.CreateIndex(creareParam);
 
-                    // 2.7、-------- 当前区域完成日志
+                    // 2.7、-------- Current area completion log
                     msg = string.Format("search area【{0}】，index {1} completed；{2} num：{3}，deleted：{4}，error：{5}，duration：{6}.", areaInfo.AreaName, tag, tag, updateFilePaths.Count, deleteFilePaths.Count, errorCount, singleTaskMark.ConsumeTime);
                     log.Info(msg);
                     ShowStatus(msg);
 
                     MessageCore.ShowSuccess(msg);
 
-                    // 2.8、-------- 记录文件总数、更新总数、删除总数、错误总数
+                    // 2.8、-------- Total number of records, total number of updates, total number of deletions, total number of errors
                     fileTotalCount = fileTotalCount + allFilePaths.Count;
                     updateTotalCount = updateTotalCount + updateFilePaths.Count;
                     deleteTotalCount = deleteTotalCount + deleteFilePaths.Count;
                     errorTotalCount = errorTotalCount + errorCount;
                 }
 
-                // 3、-------- 完成日志
+                // 3、-------- complete log
                 string message = string.Format("index {0} completed. regions：{1}，{2} num：{3}，deleted：{4}，error：{5}，duration：{6}.", tag, areaInfos.Count, tag, updateTotalCount, deleteTotalCount, errorTotalCount, totalTaskMark.ConsumeTime);
                 log.Info(message);
                 ShowStatus(message);
 
-                // 4、-------- 标记索引文件数量 和 最后更新时间
+                // 4、-------- Number of indexed files and last update time
                 AppUtil.WriteValue("AppConfig", "FileTotalCount", fileTotalCount + "");
                 AppUtil.WriteValue("AppConfig", "LastIndexTime", DateTime.Now.ToString());
 
-                // 5、-------- 构建结束
+                // 5、-------- finish construction
                 build = false;
             }
             catch (Exception ex)
@@ -1395,10 +1368,10 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 显示状态
+        /// show status
         /// </summary>
-        /// <param name="text">消息</param>
-        /// <param name="percent">进度，0-100</param>
+        /// <param name="text">message</param>
+        /// <param name="percent">progress，0-100</param>
         private void ShowStatus(string text, double percent = AppConst.MAX_PERCENT)
         {
             void Refresh()
@@ -1425,9 +1398,9 @@ namespace TextLocator
         }
         #endregion
 
-        #region 右侧预览区域
+        #region right preview area
         /// <summary>
-        /// 打开文件
+        /// open file
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1448,7 +1421,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 打开文件夹
+        /// open folder
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1476,32 +1449,32 @@ namespace TextLocator
         }
         #endregion
 
-        #region 其他私有封装
+        #region other private encapsulation
         /// <summary>
-        /// 获取文本关键词
+        /// get search keywords
         /// </summary>
         /// <returns></returns>
         private List<string> GetSearchTextKeywords()
         {
             string searchText = SearchText.Text.Trim();
-            // 申明关键词列表
+            // Declaration Keyword List
             List<string> keywords = new List<string>();
-            // 为空直接返回null
+            // Return null if empty
             if (string.IsNullOrEmpty(searchText)) return keywords;
 
-            // 精确检索未选中 || 非正则表达式
+            // Exact search not selected || Non-regular expression
             if (PreciseRetrieval.IsChecked == false || !searchText.StartsWith(AppConst.REGEX_SEARCH_PREFIX))
             {
-                // 替换内置（AND|OR|NOT|\\&\\&|\\|\\||\"|\\~|\\:）特殊字符
+                //Replace built-in special characters (AND|OR|NOT|&&|||"|~|:)
                 searchText = AppConst.REGEX_BUILT_IN_SYMBOL.Replace(searchText, " ");
             }
 
-            // 精确检索 || 正则表达式
+            // Precise Search || Regular Expression
             if (PreciseRetrieval.IsChecked == true || searchText.StartsWith(AppConst.REGEX_SEARCH_PREFIX))
             {
                 keywords.Add(searchText);
             }
-            // 空格分词
+            // Space segmentation
             else if (searchText.IndexOf(" ") != -1)
             {
                 string[] texts = searchText.Split(' ');
@@ -1514,12 +1487,12 @@ namespace TextLocator
                     keywords.Add(keyword);
                 }
             }
-            // 分词器自动分词
+            // Automatic tokenization by the tokenizer
             else
             {
-                // 分词列表
+                // segmentList
                 List<string> segmentList = IndexCore.GetKeywords(searchText);//AppConst.INDEX_SEGMENTER.CutForSearch(searchText).ToList();
-                // 合并关键列表
+                // combine keywords
                 keywords = keywords.Union(segmentList).ToList();
             }
             return keywords;
@@ -1529,7 +1502,7 @@ namespace TextLocator
         #region Loading
 
         /// <summary>
-        /// 显示搜索Loading
+        /// Show search Loading
         /// </summary>
         private void ShowSearchLoading()
         {
@@ -1539,7 +1512,7 @@ namespace TextLocator
             }));
         }
         /// <summary>
-        /// 隐藏搜索Loading
+        /// Hide search Loading
         /// </summary>
         private void HideSearchLoading()
         {
@@ -1552,11 +1525,11 @@ namespace TextLocator
 
         private void BackToAISearch_Click(object sender, RoutedEventArgs e)
         {
-            // ① 隐藏自己，别 Close（Close 会触发 HotKey 注销等一堆逻辑）
+            
     this.Hide();
 
-    // ② 若 AIPage 已经开过就激活；否则新建
-    if (Application.Current.Windows
+            // If AIPage has already been opened, activate it; otherwise, create a new one.
+            if (Application.Current.Windows
                        .OfType<AIPage>()
                        .FirstOrDefault() is AIPage aiWin)
     {
@@ -1575,25 +1548,25 @@ namespace TextLocator
             if (keywords == null || keywords.Length == 0)
                 return;
 
-            // 1. 组合成查询
+            // 1. Combine into a query
             string combinedQuery = string.Join(" ", keywords);
 
-            // 2. 设到 UI 上
+            // 2. Set to the UI
             SearchText.Text = combinedQuery;
 
-            // 3. 恢复和点击搜索时一样的默认状态（和 SearchButton_Click 里前半部分一致）
+            // 3. Restore to the same default state as when clicking search.
             PreciseRetrieval.IsChecked = false;
             MatchWords.IsChecked = false;
 
-            // 全部文件类型
+            // all file types
             ToggleButtonAutomationPeer toggleButtonAutomationPeer = new ToggleButtonAutomationPeer(_radioButtonAll);
             IToggleProvider toggleProvider = toggleButtonAutomationPeer.GetPattern(PatternInterface.Toggle) as IToggleProvider;
             toggleProvider.Toggle();
 
-            // 默认排序
+            // default sort
             SortOptions.SelectedIndex = 0;
 
-            // 4. 真正执行搜索（默认第一页）
+            // 4. execute search
             BeforeSearch();
         }
 

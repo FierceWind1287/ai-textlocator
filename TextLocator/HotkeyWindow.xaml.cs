@@ -14,17 +14,18 @@ using TextLocator.Util;
 namespace TextLocator
 {
     /// <summary>
-    /// HotkeyWindow.xaml 的交互逻辑
+    /// Interaction logic for HotkeyWindow.xaml
     /// </summary>
     public partial class HotkeyWindow : Window
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
-        /// 单例
+        /// Singleton instance
         /// </summary>
         private static HotkeyWindow _instance;
 
-        // 集合
+        // Collection
         private ObservableCollection<HotKeyModel> _hotKeyList = new ObservableCollection<HotKeyModel>();
         public ObservableCollection<HotKeyModel> HotKeyList { get => _hotKeyList; set => _hotKeyList = value; }
 
@@ -34,7 +35,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 创建系统参数设置窗体实例
+        /// Create an instance of the system parameter settings window
         /// </summary>
         /// <returns></returns>
         public static HotkeyWindow CreateInstance()
@@ -44,12 +45,12 @@ namespace TextLocator
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // 初始化快捷键
-            InitHotKey();   
+            // Initialize hotkeys
+            InitHotKey();
         }
 
         /// <summary>
-        /// 初始化快捷键
+        /// Initialize hotkeys
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
         private void InitHotKey()
@@ -58,9 +59,9 @@ namespace TextLocator
             list.ToList().ForEach(x => HotKeyList.Add(x));
         }
 
-        #region 保存并关闭
+        #region Save and Close
         /// <summary>
-        /// 保存并关闭
+        /// Save and close
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -70,7 +71,7 @@ namespace TextLocator
             {
                 return;
             }
-            foreach(HotKeyModel hotKey in HotKeyList)
+            foreach (HotKeyModel hotKey in HotKeyList)
             {
                 log.Debug(Newtonsoft.Json.JsonConvert.SerializeObject(hotKey));
                 AppUtil.WriteValue("HotKey", hotKey.Name, String.Format("{0}_{1}_{2}_{3}_{4}", hotKey.IsUsable, hotKey.IsSelectCtrl, hotKey.IsSelectAlt, hotKey.IsSelectShift, hotKey.SelectKey));
@@ -80,7 +81,7 @@ namespace TextLocator
         #endregion
 
         /// <summary>
-        /// 窗体关闭
+        /// Window close event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

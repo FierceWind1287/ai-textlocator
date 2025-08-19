@@ -28,7 +28,7 @@
                 <Button x:Name="DeleteButton" Content="Delete" Margin="70,0,0,0" Width="60" Background="Red" Foreground="White"/>
             </Grid>
         </StackPanel>
-        <!-- 分割线 -->
+        
         <Line X1="10" Y1="0" X2="800" Y2="0" Margin="0,0,0,0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="0.5"></Line>
     </Grid>
 </UserControl>

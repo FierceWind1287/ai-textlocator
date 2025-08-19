@@ -13,7 +13,7 @@
         Closed="Window_Closed">
 
     <Window.Resources>
-        <!-- 可选：给 TextBlock 一个默认前景色 -->
+        <!-- set foreground color of the textblock -->
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="#252526"/>
         </Style>
@@ -22,7 +22,7 @@
     <Grid>
         <StackPanel Margin="12">
 
-            <!-- 原作者 -->
+            <!-- orignal author -->
             <GroupBox Header="Original Author"
                       Margin="0,0,0,10"
                       BorderBrush="#2F7AE5"
@@ -44,7 +44,7 @@
                 </StackPanel>
             </GroupBox>
 
-            <!-- AI Assistant 作者 -->
+            <!-- AI Assistant author -->
             <GroupBox Header="AI Assistant Author"
                       Margin="0,0,0,10"
                       BorderBrush="#2F7AE5"
@@ -66,16 +66,14 @@
                 </StackPanel>
             </GroupBox>
 
-            <!-- 底部一行：左文字 + 右侧两个 logo -->
+            <!-- textblock + two logos -->
             <Grid Margin="0,-10,0,0" HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <!-- 左侧占满剩余空间 -->
                     <ColumnDefinition Width="Auto" />
-                    <!-- 右侧自适应内容宽度 -->
                 </Grid.ColumnDefinitions>
 
-                <!-- 左侧文本 -->
+                <!-- project title-->
                 <TextBlock Grid.Column="0"
                Text="UCL IXN project- Collaboration with Intel"
                FontWeight="SemiBold"
@@ -86,7 +84,7 @@
                Margin="0,0,8,0"/>
                 
 
-                <!-- 右侧 logo 组 -->
+                <!-- ucl logo and intel logo-->
                 <StackPanel Grid.Column="1"
                 Orientation="Horizontal"
                 HorizontalAlignment="Right"

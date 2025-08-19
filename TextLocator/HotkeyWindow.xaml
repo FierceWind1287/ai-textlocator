@@ -43,7 +43,7 @@
                 </ItemsControl>
             </GroupBox>
         </Grid>
-        <!-- 功能按钮 -->
+        <!-- function btn -->
         <Button x:Name="SaveClose" Content="Save" Background="Green" Foreground="White" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="210,0,20,10" Width="60" Click="SaveClose_Click"/>
     </Grid>
 </Window>

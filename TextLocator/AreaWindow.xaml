@@ -8,9 +8,9 @@
         Title="Search Scope Setting" Height="465" Width="830" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ResizeMode="CanMinimize" Icon="/Resource/App.ico" Loaded="Window_Loaded" >
     <Grid Margin="10">
         <StackPanel>
-            <!-- 文字提示 -->
+            <!-- Text prompt -->
             <TextBlock Text="	&quot;Area	&quot; represents the search scope (needs to be enabled for use in search)." FontWeight="Bold" Foreground="OrangeRed"/>
-            <!-- 表头 -->
+            <!-- Table header -->
             <Grid>
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                     <Grid Width="150" VerticalAlignment="Center" HorizontalAlignment="Left">
@@ -26,10 +26,10 @@
                         <TextBlock Text="Operation" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
-                <!-- 分割线 -->
+                <!-- Separator line -->
                 <Line X1="0" Y1="0" X2="810" Y2="0" Margin="0,0,0,0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="0.5"></Line>
             </Grid>
-            <!-- 列表区 -->
+            <!-- List area -->
             <ScrollViewer Height="310" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
                 <StackPanel x:Name="AreaInfoList">
                     <Grid>
@@ -50,7 +50,7 @@
                                 <Button Content="Delete" Margin="70,0,0,0" Width="60" Background="Red" Foreground="White"/>
                             </Grid>
                         </StackPanel>
-                        <!-- 分割线 -->
+                        <!-- Separator line -->
                         <Line X1="10" Y1="0" X2="800" Y2="0" Margin="0,0,0,0" VerticalAlignment="Bottom" Stroke="Gray" StrokeThickness="0.5"></Line>
                     </Grid>
                 </StackPanel>

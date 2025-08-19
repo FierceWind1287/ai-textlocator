@@ -8,7 +8,7 @@
         WindowStyle="ToolWindow">
 
     <StackPanel Margin="20" Width="260">
-        <!-- ★ 把 TextBlock 的 Text 绑定到 Hint 依赖属性 -->
+        <!-- ★ Bind the Text of the TextBlock to the Hint dependency property. -->
         <TextBlock Text="{Binding Hint, RelativeSource={RelativeSource AncestorType=Window}}"
                    Margin="0,0,0,10"
                    TextAlignment="Center" />

@@ -13,13 +13,14 @@ using TextLocator.Util;
 namespace TextLocator
 {
     /// <summary>
-    /// HelpWindow.xaml 的交互逻辑
+    /// Interaction logic for HelpWindow.xaml
     /// </summary>
     public partial class HelpWindow : Window
     {
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
-        /// 单例
+        /// Singleton instance
         /// </summary>
         private static HelpWindow _instance;
 
@@ -29,7 +30,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 创建系统参数设置窗体实例
+        /// Create an instance of the system parameter settings window
         /// </summary>
         /// <returns></returns>
         public static HelpWindow CreateInstance()
@@ -38,7 +39,7 @@ namespace TextLocator
         }
 
         /// <summary>
-        /// 窗体关闭
+        /// Window close event
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -47,6 +48,7 @@ namespace TextLocator
             _instance.Topmost = false;
             _instance = null;
         }
+
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             try
@@ -55,12 +57,10 @@ namespace TextLocator
             }
             catch
             {
-                // 可选：失败时提示
+                // Optional: show message when navigation fails
                 // MessageBox.Show("Unable to open link: " + e.Uri.AbsoluteUri);
             }
             e.Handled = true;
         }
-
     }
-
 }

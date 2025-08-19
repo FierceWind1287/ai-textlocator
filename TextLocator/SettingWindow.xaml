@@ -21,7 +21,7 @@
                 <StackPanel>
                     <GroupBox  Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Index and Files" >
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                            <!-- 索引更新任务间隔时间 -->
+                            <!-- Index update task interval -->
                             <Grid Width="500">
                                 <TextBlock Text="Index Update:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                                 <CheckBox x:Name="EnableIndexUpdateTask" Content="Enable Auto Update Task (Requires Restart)" Margin="100,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
@@ -32,9 +32,9 @@
                                     </Grid>
                                 </Grid>
                             </Grid>
-                            <!-- 分割线 -->
+                            <!-- Separator line -->
                             <Line X1="0" Y1="60" X2="0" Y2="0" Margin="10,0,10,0" Stroke="Gray" StrokeThickness="1"></Line>
-                            <!-- 文件读取超时时间 -->
+                            <!-- File read timeout -->
                             <Grid Width="500">
                                 <TextBlock Text="File Read Timeout:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                                 <Grid Margin="20,30,20,0">
@@ -48,7 +48,7 @@
                     </GroupBox>
                     <GroupBox  Width="Auto" Height="Auto" Margin="0 0 0 10" Header="List and Cache" >
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                            <!-- 结果列表分页条数 -->
+                            <!-- Result list page size -->
                             <Grid Width="500">
                                 <TextBlock Text="Results Per Page:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                                 <Grid Margin="20,30,20,0">
@@ -58,9 +58,9 @@
                                     </Grid>
                                 </Grid>
                             </Grid>
-                            <!-- 分割线 -->
+                            <!-- Separator line -->
                             <Line X1="0" Y1="60" X2="0" Y2="0" Margin="10,0,10,0" Stroke="Gray" StrokeThickness="1"></Line>
-                            <!-- 缓存池容量 -->
+                            <!-- Cache pool size -->
                             <Grid Width="500">
                                 <TextBlock Text="Cache Pool Size:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                                 <Grid Margin="20,30,20,0">
@@ -74,7 +74,7 @@
                     </GroupBox>
                     <GroupBox Width="Auto" Height="Auto" Margin="0 0 0 10" Header="Content Preview" >
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                            <!-- 预览上下文摘要 -->
+                            <!-- Preview context summary -->
                             <Grid Width="500">
                                 <TextBlock Text="Preview Summary:" VerticalAlignment="Top" HorizontalAlignment="Left"/>
                                 <CheckBox x:Name="EnablePreviewSummary" Content="Enable Preview Summary (Context Summary by Default)" Margin="120,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
@@ -87,13 +87,13 @@
                             </Grid>
                         </StackPanel>
                     </GroupBox>
-                    
-                    <!-- 底部增加10高度，否则太近了 -->
+
+                    <!-- Add 10px height at the bottom, otherwise too close -->
                     <Grid Margin="0,10,0,0"></Grid>
                 </StackPanel>
             </ScrollViewer>
         </Grid>
-        <!-- 功能按钮 -->
+        <!-- Action button -->
         <Button x:Name="SaveClose" Content="Save" Background="Green" Foreground="White" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,10" Width="60" Click="SaveClose_Click"/>
     </Grid>
 </Window>

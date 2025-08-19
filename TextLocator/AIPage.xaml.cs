@@ -15,26 +15,26 @@ namespace TextLocator
 {
     public partial class AIPage : Window
     {
-        // ────────────── 构造 ──────────────
+        // ────────────── construct ──────────────
         public AIPage()
         {
             InitializeComponent();
-            LoadAreaInfo();                       // 填充“Search Area”信息
+            LoadAreaInfo();                       //Fill in the 'Search Area' information.
 
-            // ★ 可选：后台预热一次 KeywordService，首帧加载更快
+            // ★ Optional: Warm up the KeywordService in the background once for faster first frame loading.
             _ = Task.Run(() => WarmupKeywordService());
         }
 
-        // ────────────── MainWindow 切换 ──────────────
+        // ────────────── MainWindow Switch ──────────────
         private void EnterFileSearch_Click(object sender, RoutedEventArgs e)
         {
             var main = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
-            (main ?? new MainWindow()).Show();     // 没开就新建
+            (main ?? new MainWindow()).Show();     // If it doesn't exist, create a new one.
             main?.Activate();
             Close();
         }
 
-        // ────────────── 区域设置对话框 ──────────────
+        // ────────────── Search Area Settings Dialog ──────────────
         private void AreaInfos_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var dlg = new AreaWindow { Owner = this, Topmost = true };
@@ -61,7 +61,7 @@ namespace TextLocator
                 list.Select(a => $"{a.AreaName}: {string.Join("，", a.AreaFolders)}"));
         }
 
-        // ────────────── 输入框 & 清空键 ──────────────
+        // ────────────── Input box & Clear button ──────────────
         private void CommandInput_TextChanged(object s, TextChangedEventArgs e) =>
             CleanButton.Visibility = string.IsNullOrWhiteSpace(CommandInput.Text)
                                      ? Visibility.Hidden : Visibility.Visible;
@@ -77,7 +77,7 @@ namespace TextLocator
             if (e.Key == Key.Enter) SearchButton_Click(this, new RoutedEventArgs());
         }
 
-        // ────────────── 录音相关（与你原来保持一致）──────────────
+        // ────────────── Audio related──────────────
         private WaveInEvent _mic;
         private readonly List<float> _audioBuffer = new();
         private bool _isRecording;
@@ -144,7 +144,7 @@ namespace TextLocator
             finally { prog.Close(); }
         }
 
-        // ────────────────── 搜索按钮 ──────────────────
+        // ────────────────── search btn ──────────────────
         private async void SearchButton_Click(object sender, RoutedEventArgs e)
         {
             string query = CommandInput.Text?.Trim() ?? "";
@@ -156,7 +156,7 @@ namespace TextLocator
 
             SearchButton.IsEnabled = CleanButton.IsEnabled = false;
 
-            // ① 打开进度弹窗
+            // Open the progress popup
             var prog = new ProgressWindow
             {
                 Owner = this,
@@ -166,8 +166,7 @@ namespace TextLocator
 
             try
             {
-                // ② 在后台线程执行关键词提取（不会阻塞 UI）
-                // 建议：这里其实不用 Task.Run，因为 ExtractKeywordsAsync 本身就是异步的
+                // Perform keyword extraction in a background thread 
                 string[] keywords = await ExtractKeywordsAsync(query);
 
                 if (keywords.Length == 0)
@@ -176,25 +175,25 @@ namespace TextLocator
                     return;
                 }
 
-                // ③ 找到 / 创建 MainWindow
+                // Find / Create MainWindow
                 MainWindow main = Application.Current.Windows
                                               .OfType<MainWindow>()
                                               .FirstOrDefault();
                 if (main == null)
                 {
                     main = new MainWindow();
-                    main.Show();               // 先 Show 再调用搜索
+                    main.Show();               // Show first, then call the search.
                 }
                 else
                 {
-                    main.Show();               // 可能之前被 Hide
+                    main.Show();               // Maybe it was hidden before.
                     main.Activate();
                 }
 
-                // 把关键词交给 MainWindow
+                // Hand the keywords over to MainWindow.
                 main.PerformSearchWithKeywords(keywords);
 
-                // ④ （可选）隐藏 AIPage 本身
+                // hide the AIPage
                 this.Hide();
             }
             catch (Exception ex)
@@ -203,12 +202,12 @@ namespace TextLocator
             }
             finally
             {
-                prog.Close();                                  // 关闭进度条
+                prog.Close();                                  // close the progress popup
                 SearchButton.IsEnabled = CleanButton.IsEnabled = true;
             }
         }
 
-        // ────────────────── 调用 KeywordService.exe（实时 stderr 日志 + 超时） ──────────────────
+        // ────────────────── call KeywordService.exe ──────────────────
         private async Task<string[]> ExtractKeywordsAsync(string userInput)
         {
             string exe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "KeywordService.exe");
@@ -224,38 +223,30 @@ namespace TextLocator
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(exe)!    // ★ 固定工作目录，避免相对路径问题
+                WorkingDirectory = Path.GetDirectoryName(exe)!    // ★ Set a fixed working directory to avoid issues with relative paths.
             };
 
             using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
-            // 收集 stderr，便于超时时抛出
+            // Collect stderr to facilitate throwing an exception on timeout.
             var errBuf = new System.Text.StringBuilder();
             p.ErrorDataReceived += (s, ev) =>
             {
                 if (!string.IsNullOrEmpty(ev.Data))
                 {
                     errBuf.AppendLine(ev.Data);
-                    Debug.WriteLine("[KeywordService][stderr] " + ev.Data);   // VS Output 实时看到
+                    Debug.WriteLine("[KeywordService][stderr] " + ev.Data);  
                 }
             };
-
-            // 如果你也想实时看 stdout，可取消注释；否则保留一次性读取便于解析
-            // p.OutputDataReceived += (s, ev) =>
-            // {
-            //     if (!string.IsNullOrEmpty(ev.Data))
-            //         Debug.WriteLine("[KeywordService][stdout] " + ev.Data);
-            // };
 
             var sw = Stopwatch.StartNew();
             p.Start();
             p.BeginErrorReadLine();
-            // p.BeginOutputReadLine(); // 我们还是一次性读 stdout
 
-            // 一次性读取 stdout（关键词结果）
+            // Read stdout (keyword results)
             var outTask = p.StandardOutput.ReadToEndAsync();
 
-            // 等待完成或超时
+            // Waiting to complete or timeout
             var finished = await Task.WhenAny(outTask, Task.Delay(60_000));
             if (finished != outTask)
             {
@@ -264,7 +255,7 @@ namespace TextLocator
                 throw new TimeoutException("KeywordService initial load timeout (>60s).\n" + errBuf.ToString());
             }
 
-            // 确保子进程退出，收尾 stderr
+            // Ensure that the child process exits and handle the stderr.
             p.WaitForExit();
             Debug.WriteLine($"[KeywordService] done in {sw.ElapsedMilliseconds} ms");
 
@@ -285,13 +276,13 @@ namespace TextLocator
         }
 
 
-        // ────────────────── 预热 ──────────────────
+        // ────────────────── warm up ──────────────────
         private async Task WarmupKeywordService()
         {
             try
             {
                 var sw = Stopwatch.StartNew();
-                _ = await ExtractKeywordsAsync("warm-up"); // 日志会在 ExtractKeywordsAsync 里输出
+                _ = await ExtractKeywordsAsync("warm-up"); // The log will be output in ExtractKeywordsAsync.
                 Debug.WriteLine($"[Warmup] finished in {sw.ElapsedMilliseconds} ms");
             }
             catch (Exception ex)

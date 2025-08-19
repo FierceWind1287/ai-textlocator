@@ -12,25 +12,25 @@
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo x:Name="TaskbarInfo"/>
     </Window.TaskbarItemInfo>
-    <!-- DockPanel停靠容器 && Viewbox显示盒子 && Canvas画布 -->
+    <!-- DockPanel container && Viewbox display box && Canvas surface -->
     <DockPanel LastChildFill="True">
         <Viewbox Stretch="Fill">
             <Canvas Width="1600" Height="900">
-                <!-- 最外层限定狂 -->
+                <!-- Outermost bounding container -->
                 <Grid Width="1600" Height="900">
-                    <!-- 头部 -->
+                    <!-- Header -->
                     <StackPanel Orientation="Horizontal" Height="115" VerticalAlignment="Top">
-                        <!-- 搜索条件区 -->
+                        <!-- Search condition area -->
                         <StackPanel Margin="10,0,0,0" Width="1020">
-                            <!-- 搜索 -->
+                            <!-- Search -->
                             <StackPanel Margin="0,15,10,0" Orientation="Horizontal" >
-                                <!-- 搜索框 -->
+                                <!-- Search box -->
                                 <Border x:Name="SearchTextBorder" BorderThickness="1" BorderBrush="#2196f3" CornerRadius="4">
                                     <TextBox x:Name="SearchText" Width="898" Height="34" FontSize="20" 
                                              HorizontalAlignment="Left" VerticalContentAlignment="Center" 
                                              BorderThickness="0" BorderBrush="Transparent" 
-                                         PreviewKeyUp="SearchText_PreviewKeyUp" 
-                                         TextChanged="SearchText_TextChanged">
+                                             PreviewKeyUp="SearchText_PreviewKeyUp" 
+                                             TextChanged="SearchText_TextChanged">
                                         <TextBox.Resources>
                                             <VisualBrush x:Key="HintText" TileMode="None" Opacity="0.5" Stretch="None" AlignmentX="Left">
                                                 <VisualBrush.Visual>
@@ -56,13 +56,13 @@
                                         </TextBox.Style>
                                     </TextBox>
                                 </Border>
-                                <!-- 清空按钮 -->
-                                <Button x:Name="CleanButton" Content="X" Margin="-36,0,0,0" Width="36" Height="36" Background="Red" Foreground="White"  Click="CleanButton_Click" Visibility="Hidden"/>
-                                <!-- 搜索按钮 -->
+                                <!-- Clear button -->
+                                <Button x:Name="CleanButton" Content="X" Margin="-36,0,0,0" Width="36" Height="36" Background="Red" Foreground="White" Click="CleanButton_Click" Visibility="Hidden"/>
+                                <!-- Search button -->
                                 <Button x:Name="SearchButton" Content="Search" FontSize="16" Margin="10,0,0,0" Width="100" Height="36" Click="SearchButton_Click" Background="#2196f3" Foreground="White"/>
                             </StackPanel>
 
-                            <!-- 条件和排序 -->
+                            <!-- Conditions and sorting -->
                             <Grid Margin="0,10,10,0" VerticalAlignment="Top" Height="40" Background="#F3F3F3">
                                 <StackPanel x:Name="SearchFileType" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <RadioButton GroupName="SearchFileType" Width="80" Margin="1" IsChecked="True" Tag="{x:Static enums:FileType.All}">All</RadioButton>
@@ -77,24 +77,24 @@
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
-                        <!-- 分割线 -->
+                        <!-- Separator line -->
                         <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Center" ShowsPreview="False" Background="Gray" />
-                        <!-- 扩展区 -->
+                        <!-- Extension area -->
                         <Grid Margin="10,0,0,0" Width="560">
-                            <!-- 其他条件 -->
+                            <!-- Other conditions -->
                             <StackPanel Margin="0,10,10,0" Orientation="Horizontal" >
-                                <!-- 扩展信息 -->
+                                <!-- Extended information -->
                                 <StackPanel>
-                                    <!-- 搜索区域 -->
+                                    <!-- Search area -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="5*" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="Enabled Area: " Margin="0,5,0,0" HorizontalAlignment="Left"/>
-                                        <TextBox Grid.Column="1" x:Name="EnableAreaInfos" Text="Default Area" IsReadOnly="true"  Height="25" Margin="0,4,0,0" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" MouseDoubleClick="AreaInfos_MouseDoubleClick"/>
+                                        <TextBox Grid.Column="1" x:Name="EnableAreaInfos" Text="Default Area" IsReadOnly="true" Height="25" Margin="0,4,0,0" HorizontalAlignment="Stretch" VerticalContentAlignment="Center" MouseDoubleClick="AreaInfos_MouseDoubleClick"/>
                                     </Grid>
-                                    <!-- 排除区域 -->
+                                    <!-- Excluded area -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -106,37 +106,37 @@
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel Margin="0,0,0,10" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Left">
-                                <!-- 正则按钮 -->
+                                <!-- Regex button -->
                                 <Button x:Name="RegularToolButton" Content="Regex" ToolTip="Open the regex tool" Margin="0,0,10,0" Width="80" Height="25" Foreground="White" Background="Gray" Click="RegularToolButton_Click" Cursor="Hand"/>
-                                <!-- 设置按钮 -->
+                                <!-- Settings button -->
                                 <Button x:Name="SettingButton" Content="Edit" ToolTip="Open the settings interface" Margin="0,0,10,0" Width="80" Height="25" Foreground="White" Background="Gray" Click="SettingButton_Click" Cursor="Hand"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,0,10" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right">
-                                <!-- 返回AIPage按钮 -->
+                                <!-- Back to AIPage button -->
                                 <Button x:Name="BackToAIButton" Content="AI Search" ToolTip="Go back to AI search page" Margin="0,0,10,0" Width="80" Height="25" Foreground="White" Background="#2196f3" Click="BackToAISearch_Click" />
-                                <!-- 更新按钮 -->
+                                <!-- Update button -->
                                 <Button x:Name="IndexUpdateButton" Content="Update" ToolTip="Incremental update index" Margin="0,0,10,0" Width="80" Height="25" Foreground="White" Background="Green" Click="IndexUpdateButton_Click"/>
-                                <!-- 重建按钮 -->
+                                <!-- Rebuild button -->
                                 <Button x:Name="IndexRebuildButton" Content="Rebuild" ToolTip="Delete and rebuild index" Margin="0,0,10,0" Width="80" Height="25" Foreground="White" Background="Red" Click="IndexRebuildButton_Click"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
-                    <!-- 分割线 -->
+                    <!-- Separator line -->
                     <GridSplitter Grid.Column="1" Height="1" Cursor="Arrow" Margin="0,115,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="Gray" />
-                    <!-- 中间 -->
+                    <!-- Middle section -->
                     <Grid VerticalAlignment="Top" Margin="0,116,0,0" Height="758">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="653*" MinWidth="500"/>
                             <ColumnDefinition Width="5"/>
                             <ColumnDefinition Width="360*" MinWidth="460"/>
                         </Grid.ColumnDefinitions>
-                        <!-- 左边 -->
+                        <!-- Left side -->
                         <Grid HorizontalAlignment="Stretch" Grid.Column="0">
-                            <!-- 条件和排序 -->
+                            <!-- Conditions and sorting -->
                             <Grid Height="40" VerticalAlignment="Top" Background="#F3F3F3">
-                                <!-- 条件 -->
+                                <!-- Conditions -->
                                 <StackPanel Orientation="Horizontal">
-                                    <!-- 搜索域 -->
+                                    <!-- Search scope -->
                                     <Grid Margin="10,0,10,0">
                                         <ComboBox x:Name="SearchScope" Margin="0,0,10,0" FontSize="16" Width="205" HorizontalAlignment="Left" VerticalAlignment="Center" SelectionChanged="SearchScope_SelectionChanged" DisplayMemberPath="DisplayName" SelectedValuePath="Value">
                                             <!--<ComboBoxItem Content="File Name and Content" IsSelected="True"/>
@@ -144,19 +144,18 @@
                                             <ComboBoxItem Content="Content Only"/>-->
                                         </ComboBox>
                                     </Grid>
-                                    <!-- 精确检索 -->
+                                    <!-- Precise search -->
                                     <Grid Margin="10">
                                         <CheckBox x:Name="PreciseRetrieval" Content="Precise Search" FontSize="16" HorizontalAlignment="Left" VerticalContentAlignment="Center" Checked="CheckChange" Unchecked="CheckChange"/>
                                     </Grid>
-                                    <!-- 匹配全词 -->
+                                    <!-- Match whole word -->
                                     <Grid Margin="10">
                                         <CheckBox x:Name="MatchWords" Content="Whole Word Matching" FontSize="16" HorizontalAlignment="Left" VerticalContentAlignment="Center" Checked="CheckChange" Unchecked="CheckChange"/>
                                     </Grid>
                                 </StackPanel>
-                                <!-- 排序 -->
+                                <!-- Sorting -->
                                 <Label Content="Sort：" FontSize="16"  Margin="0,0,150,0" HorizontalAlignment="Right" VerticalContentAlignment="Center" />
-                                <ComboBox x:Name="SortOptions" FontSize="16" Margin="0,0,10,0"  Width="140"  SelectedValuePath="Value" DisplayMemberPath="DisplayName" HorizontalAlignment="Right" VerticalAlignment="Center" SelectionChanged="SortOptions_SelectionChanged">
-
+                                <ComboBox x:Name="SortOptions" FontSize="16" Margin="0,0,10,0" Width="140" SelectedValuePath="Value" DisplayMemberPath="DisplayName" HorizontalAlignment="Right" VerticalAlignment="Center" SelectionChanged="SortOptions_SelectionChanged">
                                     <!-- 
                                     <ComboBoxItem Content="Default Order" Tag="{x:Static enums:SortType.Default}" IsSelected="True"/>
                                     <ComboBoxItem Content="By Date (ASC)" Tag="{x:Static enums:SortType.Date_ASC}"/>
@@ -164,24 +163,23 @@
                                     <ComboBoxItem Content="By Size (ASC)" Tag="{x:Static enums:SortType.Size_ASC}"/>
                                     <ComboBoxItem Content="By Size (DESC)" Tag="{x:Static enums:SortType.Size_DESC}"/>
                                     -->
-
                                 </ComboBox>
 
-                                <!-- 分割线 -->
+                                <!-- Separator line -->
                                 <GridSplitter Grid.Column="1" Height="1" Cursor="Arrow" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Background="Gray" />
                             </Grid>
 
-                            <!-- 搜索结果列表 -->
+                            <!-- Search result list -->
                             <ListBox x:Name="SearchResultList" Margin="0,40,0,0" Cursor="Hand" Height="720" VerticalAlignment="Top" BorderThickness="1" BorderBrush="#EAEAEB" Background="Transparent" SelectionChanged="SearchResultList_SelectionChanged">
                                 <ListBoxItem>
                                     <Grid Width="1000" Height="90" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                        <!-- 图标 -->
+                                        <!-- Icon -->
                                         <Image Source="/Resource/ext/word.png" Width="80" HorizontalAlignment="Left"/>
-                                        <!-- 文件信息 -->
+                                        <!-- File information -->
                                         <Grid Margin="80,0,0,0">
-                                            <!-- 文件标题、大小、时间 -->
+                                            <!-- File title, size, time -->
                                             <Grid VerticalAlignment="Top" Margin="0,10,0,0">
-                                                <!-- 文件名 Click="Hyperlink_Click" -->
+                                                <!-- File name Click="Hyperlink_Click" -->
                                                 <RichTextBox Margin="-5,0,0,0" IsHitTestVisible="False" Background="Transparent" HorizontalAlignment="Left" BorderThickness="0" VerticalAlignment="Top" IsReadOnly="True" IsDocumentEnabled="False">
                                                     <FlowDocument>
                                                         <Paragraph Foreground="#1A0DAB" TextDecorations="Underline">
@@ -191,18 +189,18 @@
                                                     </FlowDocument>
                                                 </RichTextBox>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                    <!-- 文件大小 -->
+                                                    <!-- File size -->
                                                     <TextBlock Text="1MB" Foreground="#545454" HorizontalAlignment="Right"/>
                                                     <TextBlock Text="•" Foreground="#545454" HorizontalAlignment="Right" Margin="20,0,20,0"/>
-                                                    <!-- 文件大小 -->
+                                                    <!-- File date -->
                                                     <TextBlock Text="2021-08-31" Foreground="#545454" HorizontalAlignment="Right"/>
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- 文件夹 -->
+                                            <!-- File folder -->
                                             <TextBlock Text="C:\Users\{User}\Document\Configuration Details Report.doc" Margin="0,30,0,0" Foreground="#006621" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
-                                            <!-- 预览 -->
+                                            <!-- Preview -->
                                             <RichTextBox Margin="-5,50,0,0" Background="Transparent" HorizontalAlignment="Left" BorderThickness="0" VerticalAlignment="Top" IsDocumentEnabled="True">
                                                 <FlowDocument>
                                                     <Paragraph>
@@ -216,22 +214,21 @@
                                                             Motherboard        ASUS PRIME X570-P (AMD PCI Standard Host CPU Bridge)
                                                             Graphics Card      Nvidia GeForce RTX 2080 Ti (11 GB / Colorful)...
                                                         </Run>
-
                                                     </Paragraph>
                                                 </FlowDocument>
                                             </RichTextBox>
                                         </Grid>
 
-                                        <!-- 分割线 -->
+                                        <!-- Separator line -->
                                         <GridSplitter Grid.Column="1" Height="1" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Background="Gray" />
                                     </Grid>
                                 </ListBoxItem>
                             </ListBox>
 
-                            <!-- 搜索加载中 -->
+                            <!-- Search loading -->
                             <TextBlock x:Name="_searchLoading" Text="Searching in progress..." FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="#2196f3" Margin="0,130,0,0" Visibility="Collapsed"/>
 
-                            <!-- 分页 -->
+                            <!-- Pagination -->
                             <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="White" Opacity="0.8">
                                 <rubyer:PageBar 
                                     IsShowTotal="True"
@@ -245,34 +242,34 @@
                                     CurrentForeground="{DynamicResource AccentForeground}"/>
                             </StackPanel>
                         </Grid>
-                        <!-- 分割线 -->
+                        <!-- Separator line -->
                         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" ShowsPreview="False" Background="Gray" />
-                        <!-- 右边 -->
+                        <!-- Right side -->
                         <Grid Grid.Column="3">
-                            <!-- 预览操作 -->
+                            <!-- Preview actions -->
                             <Grid Height="40" VerticalAlignment="Top" Background="#F3F3F3">
-                                <!-- 打开文件 -->
+                                <!-- Open file -->
                                 <Image x:Name="OpenFile" Source="/Resource/btn_file.png" ToolTip="Open file" HorizontalAlignment="Left" Margin="10,5,0,5" MouseUp="OpenFile_MouseUp"/>
-                                <!-- 打开文件夹 -->
+                                <!-- Open folder -->
                                 <Image x:Name="OpenFolder" Source="/Resource/btn_folder.png" ToolTip="Open folder" HorizontalAlignment="Left" Margin="50,5,0,5" MouseUp="OpenFolder_MouseUp"/>
 
-                                <!-- 文件信息 -->
+                                <!-- File information -->
                                 <Grid Margin="0,0,10,0" Height="40" VerticalAlignment="Top" HorizontalAlignment="Right">
-                                    <!-- 图标 -->
-                                    <Image x:Name="PreviewFileTypeIcon"  Source="/Resource/ext/word.png" Margin="10,5,0,5" HorizontalAlignment="Left"/>
-                                    <!-- 文件名 -->
+                                    <!-- Icon -->
+                                    <Image x:Name="PreviewFileTypeIcon" Source="/Resource/ext/word.png" Margin="10,5,0,5" HorizontalAlignment="Left"/>
+                                    <!-- File name -->
                                     <TextBlock x:Name="PreviewFileName" Text="Configuration Details Report.doc" FontWeight="Bold" Margin="40,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                                 </Grid>
-                                <!-- 分割线 -->
+                                <!-- Separator line -->
                                 <GridSplitter Grid.Column="1" Height="1" Cursor="Arrow" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Background="Gray" />
                             </Grid>
 
-                            <!-- 内容预览 -->
+                            <!-- Content preview -->
                             <Grid Margin="0,40,0,0">
-                                <!-- 预览图片 -->
+                                <!-- Preview image -->
                                 <Image x:Name="PreviewImage"/>
 
-                                <!-- 预览文档 -->
+                                <!-- Preview document -->
                                 <FlowDocumentReader x:Name="PreviewFileContent" ViewingMode="Page" ScrollViewer.VerticalScrollBarVisibility="Auto" IsManipulationEnabled="False" IsPrintEnabled="False" >
                                     <FlowDocument Language="en-GB">
                                         <Paragraph FontSize="13" FontFamily="微软雅黑">
@@ -321,9 +318,7 @@
                                         <Paragraph FontSize="13" FontFamily="微软雅黑">
                                             <Run>--------[</Run>
                                             <Run Foreground="Red" FontWeight="Bold">Processor</Run>
-                                            <Run>]-----------------------------------------------------------------------
-
-                                            </Run>
+                                            <Run>]-----------------------------------------------------------------------</Run>
                                         </Paragraph>
                                         <Paragraph FontSize="13" FontFamily="微软雅黑">
                                             <Run Foreground="Red" FontWeight="Bold">Processor</Run>
@@ -340,7 +335,6 @@
     L3 Cache             64 MB, 8-Way, 64-byte lines  
     Features             MMX+, SSE, SSE2, SSE3, SSSE3, SSE4A, SSE4.1, HTT, X86-64
                                             </Run>
-
                                         </Paragraph>
                                         <Paragraph FontSize="13" FontFamily="微软雅黑">
                                             <Run>--------[ HardDiskDrive ]--------------------------------------------------------------------------</Run>
@@ -445,7 +439,6 @@
     Manufacturer        Corsair  
     Module Width        64 Bits  
     Module Voltage      SSTL 1.2V
-
                                             </Run>
 
                                         </Paragraph>
@@ -461,7 +454,6 @@
     Chip Vendor         Nvidia  
     Driver Version      27.21.14.5148  
     Driver Date         2020-06-21
-
                                             </Run>
 
                                         </Paragraph>
@@ -479,7 +471,6 @@
     Resolution          3840 x 2160, 32-bit True Color  
     Gamma               2.20  
     Power Management    Active-Off
-
                                             </Run>
 
                                         </Paragraph>
@@ -501,7 +492,6 @@
     Keyboard             HID Standard Keyboard  
     Keyboard             HID Standard Keyboard  
     Mouse                HID-compliant Mouse
-
                                             </Run>
 
                                         </Paragraph>
@@ -652,7 +642,6 @@
     Category            Multimedia / Hi-definition Audio
     Subsystem Vendor    ASUSTeK
     Subsystem ID        87BB1043
-
                                             </Run>
                                         </Paragraph>
                                         <Paragraph FontSize="13" FontFamily="微软雅黑">
@@ -688,9 +677,7 @@
     Device              AsusTek Computer Inc. AURA LED Controller  
     Serial              9876543210  
     Version             USB 2.0
-
                                             </Run>
-
                                         </Paragraph>
                                         <Paragraph FontSize="13" FontFamily="微软雅黑">
                                             <Run>--------[ Sensors ]--------------------------------------------------------------------------------</Run>
@@ -705,39 +692,35 @@
     GPU                 58°C  
     Hard Drive Temp     42°C  
     Fan Speed           1050 RPM
-
                                             </Run>
-
                                         </Paragraph>
                                     </FlowDocument>
                                 </FlowDocumentReader>
                             </Grid>
 
-                            <!-- 预览列表切换 -->
+                            <!-- Preview list switch -->
                             <StackPanel x:Name="SwitchPreview" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="10,0,0,0" Visibility="Collapsed">
-                                <Image x:Name="BtnLast" ToolTip="Previous" Source="/Resource/btn_left.png" Width="30" HorizontalAlignment="Left" Margin="0,0,5,0"  MouseUp="BtnLast_MouseUp"/>
+                                <Image x:Name="BtnLast" ToolTip="Previous" Source="/Resource/btn_left.png" Width="30" HorizontalAlignment="Left" Margin="0,0,5,0" MouseUp="BtnLast_MouseUp"/>
                                 <TextBlock Text="{Binding PreviewPage}" Foreground="#2196f3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 <Image x:Name="BtnNext" ToolTip="Next" Source="/Resource/btn_right.png" Width="30" HorizontalAlignment="Left" Margin="5,0,0,0" MouseUp="BtnNext_MouseUp"/>
                             </StackPanel>
                         </Grid>
                     </Grid>
-                    <!-- 分割线 -->
+                    <!-- Separator line -->
                     <GridSplitter Grid.Column="1" Height="1" VerticalAlignment="Bottom" Margin="0,0,0,25" HorizontalAlignment="Stretch" Background="Gray" />
-                    <!-- 底部 -->
+                    <!-- Footer -->
                     <Grid Height="25" VerticalAlignment="Bottom" Background="#C8C8C8">
-                      
-                        <!-- 索引进度条 -->
+                        <!-- Index progress bar -->
                         <ProgressBar x:Name="WorkProgress" Value="80" Maximum="100" Foreground="#2196f3"
-                                                rubyer:ProgressBarHelper.Thickness="100"
-                                                rubyer:ProgressBarHelper.ShowPercent="True" />
-                        <!-- 状态信息 -->
-                        <TextBlock x:Name="WorkStatus" Text="Ready" Foreground="White" FontSize="15" Margin="10,0,0,0" HorizontalAlignment="Left"  />
+                                     rubyer:ProgressBarHelper.Thickness="100"
+                                     rubyer:ProgressBarHelper.ShowPercent="True" />
+                        <!-- Status text -->
+                        <TextBlock x:Name="WorkStatus" Text="Ready" Foreground="White" FontSize="15" Margin="10,0,0,0" HorizontalAlignment="Left" />
                     </Grid>
 
-                    <!-- 消息容器 -->
+                    <!-- Message containers -->
                     <rubyer:MessageContainer Identifier="MessageContainers" Grid.ColumnSpan="2"/>
                     <rubyer:MessageBoxContainer Identifier="MessageBoxContainers" Grid.ColumnSpan="2"/>
-                    
                 </Grid>
             </Canvas>
         </Viewbox>

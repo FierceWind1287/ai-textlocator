@@ -8,12 +8,11 @@
         xmlns:vm="clr-namespace:RegularTool.ViewModel"
         xmlns:edit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
-        Title="正则小助手" Height="717.335" Width="1044.316" WindowStartupLocation="CenterScreen" Icon="App.png">
+        Title="Regex Assistant" Height="717.335" Width="1044.316" WindowStartupLocation="CenterScreen" Icon="App.png">
     <Window.DataContext>
         <Binding Source="{x:Static vm:MainVm.Instance}" Path=""/>
     </Window.DataContext>
     <Window.Resources>
-
     </Window.Resources>
 
     <Grid>
@@ -27,51 +26,58 @@
         </Grid.RowDefinitions>
         <Grid Margin="10">
             <DockPanel>
-                <TextBlock Text="语法样例：" DockPanel.Dock="Top" FontSize="14"/>
-                <TreeView SelectedItemChanged="TreeView_SelectedItemChanged" ItemsSource="{Binding GrammarModels}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False" DockPanel.Dock="Bottom" Margin="0 10 0 0" ItemTemplate="{StaticResource ItemNode}" Style="{StaticResource DefaultTreeView}"/>
+                <TextBlock Text="Grammar Samples:" DockPanel.Dock="Top" FontSize="14"/>
+                <TreeView SelectedItemChanged="TreeView_SelectedItemChanged" ItemsSource="{Binding GrammarModels}" 
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="False" 
+                          DockPanel.Dock="Bottom" Margin="0 10 0 0" 
+                          ItemTemplate="{StaticResource ItemNode}" Style="{StaticResource DefaultTreeView}"/>
             </DockPanel>
         </Grid>
-        <GridSplitter  Width="5" Background="White"/>
+        <GridSplitter Width="5" Background="White"/>
 
         <TabControl Grid.Column="1">
-            <TabItem Header="查找正则表达式" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <TabItem Header="Find Regex Expression" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <TextBox x:Name="txtRegular" VerticalContentAlignment="Top" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MinHeight="81" DockPanel.Dock="Top" AcceptsReturn="True" FontSize="16"/>
 
-                    <StackPanel  Grid.Row="1"  Margin="0 5" DockPanel.Dock="Top">
+                    <TextBox x:Name="txtRegular" VerticalContentAlignment="Top" TextWrapping="Wrap" 
+                             VerticalScrollBarVisibility="Auto" MinHeight="81" DockPanel.Dock="Top" 
+                             AcceptsReturn="True" FontSize="16"/>
+
+                    <StackPanel Grid.Row="1" Margin="0 5" DockPanel.Dock="Top">
                         <StackPanel Orientation="Horizontal" Height="30">
-                            <RadioButton x:Name="rbCaseSencitive" Content="忽略大小写" VerticalAlignment="Center" Margin="20 0 0 0" />
-                            <RadioButton x:Name="rbSingle" Content="单行模式"  IsChecked="True" VerticalAlignment="Center" Margin="20 0 0 0"/>
-                            <RadioButton x:Name="rbMulti" Content=".匹配多行" VerticalAlignment="Center" Margin="20 0 0 0"/>
-                            <Button x:Name="btnMatch" Click="BtnMatch_Click" Content="查找" Width="50" Padding="5 0" Margin="20 0 0 0" Height="30" VerticalAlignment="Center"/>
-                            <!--<Button x:Name="btnGenerateCode" Content="生成代码" Click="BtnGenerateCode_Click" Padding="5 0" Margin="20 0 0 0"/>-->
+                            <RadioButton x:Name="rbCaseSencitive" Content="Ignore Case" VerticalAlignment="Center" Margin="20 0 0 0" />
+                            <RadioButton x:Name="rbSingle" Content="Single-line Mode" IsChecked="True" VerticalAlignment="Center" Margin="20 0 0 0"/>
+                            <RadioButton x:Name="rbMulti" Content="Dot Matches Newline" VerticalAlignment="Center" Margin="20 0 0 0"/>
+                            <Button x:Name="btnMatch" Click="BtnMatch_Click" Content="Find" Width="50" Padding="5 0" Margin="20 0 0 0" Height="30" VerticalAlignment="Center"/>
+                            <!--<Button x:Name="btnGenerateCode" Content="Generate Code" Click="BtnGenerateCode_Click" Padding="5 0" Margin="20 0 0 0"/>-->
                         </StackPanel>
+
                         <StackPanel Orientation="Horizontal" Height="30" Margin="0 5">
-                            <Label x:Name="replaceText" Content="替换正则表达式"  Width="100" Margin="0 0 0 0" Height="25" VerticalAlignment="Center"/>
+                            <Label x:Name="replaceText" Content="Replacement Regex" Width="100" Margin="0 0 0 0" Height="25" VerticalAlignment="Center"/>
                             <TextBox x:Name="txtReplace" Width="500" Margin="20 0 0 0" Height="30" VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="16"/>
-                            <Button x:Name="btnReplacce" Click="BtnReplacce_Click" Height="30" Content="替换" Width="50" Padding="5 0" Margin="10 0 0 0" VerticalAlignment="Center"/>
+                            <Button x:Name="btnReplacce" Click="BtnReplacce_Click" Height="30" Content="Replace" Width="50" Padding="5 0" Margin="10 0 0 0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
 
                     <TabControl x:Name="tabOption" Grid.Row="2">
-                        <TabItem Header="语法提示">
-                            <TextBox Text="{Binding SelectGrammar.Content}" VerticalContentAlignment="Top" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="Auto" FontSize="16" FontFamily="微软雅黑"/>
+                        <TabItem Header="Grammar Tips">
+                            <TextBox Text="{Binding SelectGrammar.Content}" VerticalContentAlignment="Top" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" Height="Auto" FontSize="16" FontFamily="Microsoft YaHei"/>
                         </TabItem>
-                        <TabItem Header="测试文本">
+                        <TabItem Header="Test Text">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto"/>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
                                 <StackPanel Orientation="Horizontal" Margin="10">
-                                    <TextBlock Text="关键字：" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Keyword:" VerticalAlignment="Center"/>
                                     <TextBox x:Name="txtSearch" Width="200" VerticalContentAlignment="Center"/>
-                                    <Button x:Name="btnSearch" Click="BtnSearch_Click"  Content="搜索" Padding="5" VerticalAlignment="Center" Margin="10 0 0 0" >
+                                    <Button x:Name="btnSearch" Click="BtnSearch_Click" Content="Search" Padding="5" VerticalAlignment="Center" Margin="10 0 0 0" >
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Template">
@@ -80,7 +86,7 @@
                                                             <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" SnapsToDevicePixels="True" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
                                                                 <DockPanel>
                                                                     <Image Source="/Images/search.png" Width="16" DockPanel.Dock="Left" VerticalAlignment="Center"/>
-                                                                    <TextBlock Text="{TemplateBinding Content}" DockPanel.Dock="Right" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5 0  0 0"/>
+                                                                    <TextBlock Text="{TemplateBinding Content}" DockPanel.Dock="Right" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5 0 0 0"/>
                                                                 </DockPanel>
                                                             </Border>
                                                             <ControlTemplate.Triggers>
@@ -98,20 +104,18 @@
                                         </Button.Style>
                                     </Button>
                                 </StackPanel>
-                                <WindowsFormsHost Grid.Row="1" Background="White" FontSize="16" FontFamily="微软雅黑">
+                                <WindowsFormsHost Grid.Row="1" Background="White" FontSize="16" FontFamily="Microsoft YaHei">
                                     <form:RichTextBox x:Name="txtContent" />
                                 </WindowsFormsHost>
                             </Grid>
                         </TabItem>
-                        <TabItem Header="查找结果">
-                            <DataGrid x:Name="dataResult" CanUserAddRows="False"  FontSize="16" FontFamily="微软雅黑">
-
-                            </DataGrid>
+                        <TabItem Header="Find Results">
+                            <DataGrid x:Name="dataResult" CanUserAddRows="False" FontSize="16" FontFamily="Microsoft YaHei"/>
                         </TabItem>
-                        <TabItem Header="替换结果">
-                            <TextBox x:Name="txtReplaceResult" VerticalContentAlignment="Top" TextWrapping="Wrap" IsReadOnly="True" Height="Auto" FontSize="16" FontFamily="微软雅黑"/>
+                        <TabItem Header="Replace Results">
+                            <TextBox x:Name="txtReplaceResult" VerticalContentAlignment="Top" TextWrapping="Wrap" IsReadOnly="True" Height="Auto" FontSize="16" FontFamily="Microsoft YaHei"/>
                         </TabItem>
-                        <!--<TabItem Header="生成代码">
+                        <!--<TabItem Header="Generate Code">
                             <edit:TextEditor x:Name="txtCodeEdit" SyntaxHighlighting="C#" />
                         </TabItem>-->
                     </TabControl>
@@ -120,10 +124,10 @@
         </TabControl>
 
         <StatusBar Grid.Row="1" Background="White" Grid.ColumnSpan="2">
-            <StatusBarItem >提示：</StatusBarItem>
-            <StatusBarItem >匹配数量：</StatusBarItem>
+            <StatusBarItem>Tip:</StatusBarItem>
+            <StatusBarItem>Match Count:</StatusBarItem>
             <StatusBarItem x:Name="statusMatchCount" Content="0"/>
-            <StatusBarItem >子表达式数量：</StatusBarItem>
+            <StatusBarItem>Sub-expression Count:</StatusBarItem>
             <StatusBarItem x:Name="statusMatchSubCount" Content="0"/>
         </StatusBar>
     </Grid>

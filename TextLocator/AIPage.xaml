@@ -10,18 +10,18 @@
         WindowStartupLocation="CenterScreen" Background="White">
 
     <Grid Margin="40">
-        <!-- 主内容 + Credits 两行 -->
+        <!-- main contents + Credits  -->
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 背景 -->
+        <!-- background -->
         <Image Source="/Resource/74293af6-21c4-4821-ae9f-b0fa86995923.png"
                Stretch="Fill" Panel.ZIndex="-1" Opacity="0.2"
                Margin="-39,-40,-39,-40" Grid.RowSpan="2" />
 
-        <!-- 右上角 Logo（竖排） -->
+        <!-- Top-right Logo（vertical） -->
         <StackPanel Orientation="Vertical"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
@@ -38,17 +38,17 @@
                    SnapsToDevicePixels="True"/>
         </StackPanel>
 
-        <!-- 标题 -->
+        <!-- title -->
         <TextBlock Text="Welcome to TextLocator AI Assistant"
                    FontSize="55" FontWeight="Bold" Foreground="Black"
                    HorizontalAlignment="Center" Margin="0,120,0,0" VerticalAlignment="Top"/>
 
-        <!-- 副标题 + 链接 -->
+        <!-- secondary title + github hyper -->
         <TextBlock FontSize="20" FontWeight="Bold"
                    Foreground="Gray"
                    HorizontalAlignment="Center"
                    Margin="0,220,0,0" VerticalAlignment="Top">
-            <Run Text="AI-powered semantic search for your documents " />
+            <Run Text="AI-Powered Semantic Document Search System" />
             <Run Text="(" />
             <Run Text="an addon for " />
             <Hyperlink NavigateUri="https://github.com/liulei901112/TextLocator"
@@ -59,14 +59,14 @@
             <Run Text=")" />
         </TextBlock>
 
-        <!-- 搜索输入区（文本框 + 清除 + 语音 + 搜索） -->
+        <!-- search & input area（textblock + clean btn + voice input + search） -->
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
                     Margin="0,340,0,0">
             <Grid>
                 <Border BorderThickness="3" BorderBrush="Gray" CornerRadius="8" Background="White">
-                    <!-- 放大滚动条/滑块 -->
+                    <!-- scrollbar -->
                     <Border.Resources>
                         <Style TargetType="ScrollBar">
                             <Setter Property="Width" Value="40"/>
@@ -84,7 +84,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- 多行输入框 -->
+                        <!-- Multi-line input box -->
                         <TextBox x:Name="CommandInput"
                                  Grid.Column="0"
                                  Width="1100" Height="120"
@@ -100,7 +100,7 @@
                                  TextChanged="CommandInput_TextChanged"
                                  PreviewKeyUp="CommandInput_PreviewKeyUp"/>
 
-                        <!-- 清空按钮独立一列，不遮挡文本 -->
+                        <!-- clean button -->
                         <Button x:Name="CleanButton"
                                 Grid.Column="1"
                                 Width="40" Height="40"
@@ -116,7 +116,7 @@
                 </Border>
             </Grid>
 
-            <!-- 语音按钮 -->
+            <!-- voice btn -->
             <Button x:Name="MicButton"
                     Width="60" Height="60"
                     Background="#3A3A3A"
@@ -129,7 +129,7 @@
                                                Width="28" Height="28"/>
             </Button>
 
-            <!-- 搜索按钮 -->
+            <!-- search btn -->
             <Button x:Name="SearchButton"
                     Width="60" Height="60"
                     Background="#3A3A3A"
@@ -143,9 +143,9 @@
             </Button>
         </StackPanel>
 
-        <!-- Search Area 行 + 下一行“如何使用”链接 -->
-        <StackPanel Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,90">
-            <!-- 第 1 行：Search Area + Classic Search -->
+        <!-- Search Area  + 'how to use' link -->
+        <StackPanel Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,10">
+            <!-- 1st row：Search Area + Classic Search -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -186,8 +186,8 @@
                         FontWeight="SemiBold"/>
             </Grid>
 
-            <!-- 第 2 行：靠左的文本链接（点击弹窗） -->
-            <TextBlock Margin="0,15,0,0" FontSize="14" HorizontalAlignment="Left">
+            <!-- 2nd row：text hyperlink (how to use) -->
+            <TextBlock Margin="0,60,0,0" FontSize="14" HorizontalAlignment="Left">
                 <Hyperlink Foreground="#007ACC"
            TextDecorations="Underline"
            Cursor="Hand"
@@ -197,7 +197,7 @@
             </TextBlock>
         </StackPanel>
 
-        <!-- Credits Box（在最底下一行） -->
+        <!-- Credits Box -->
         <Border Grid.Row="1"
                 Margin="0,12,0,0"
                 Padding="10"

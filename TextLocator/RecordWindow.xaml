@@ -4,9 +4,9 @@
         Title="RecordWindow" Height="220" Width="400"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
-    
 
-    <!-- 简单样式，可按主题替换 -->
+
+    <!-- Simple style, can be replaced according to theme -->
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Margin"  Value="6"/>
@@ -21,7 +21,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 状态 -->
+        <!-- Status -->
         <TextBlock x:Name="txtStatus"
                    Text="Waiting to record"
                    FontSize="14"
@@ -29,14 +29,14 @@
                    HorizontalAlignment="Center"
                    Margin="10"/>
 
-        <!-- 简单音量柱；后续可换波形 -->
+        <!-- Simple volume bar; can be replaced with waveform later -->
         <ProgressBar x:Name="pbLevel"
                      Grid.Row="1"
                      Height="12"
                      Margin="10"
                      Minimum="0" Maximum="100"/>
 
-        <!-- 控制按钮 -->
+        <!-- Control buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="btnStart"  Content="Start(_S)" Click="BtnStart_Click"/>
             <Button x:Name="btnStop"   Content="Stop(_T)" Click="BtnStop_Click"   IsEnabled="False"/>

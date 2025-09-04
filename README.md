@@ -3,7 +3,7 @@
 **TextLocator AI Assistant** is a local AI desktop solution designed for Intel laptops and ultrabooks.  
 It is optimized for **offline** and **privacy-safe** use cases.  
 
-The project integrates **local semantic search** into the open-source desktop search application [TextLocator](https://github.com/pbek/TextLocator) (WPF / .NET Framework 4.6.1).  
+The project integrates **local semantic search** into the open-source desktop search application [TextLocator](https://github.com/liulei901112/TextLocator) (WPF / .NET Framework 4.6.1).  
 The workflow is: **Natural Language / Voice → Keywords → Classic Full-Text Search**.  
 Runs on **CPU**, with optional **GPU/NPU acceleration**.
 
@@ -59,5 +59,5 @@ This project follows and complies with the licenses of:
 - **LlamaSharp**  
 - **OpenVINO / Whisper**  
 
-Licenses include **MIT / Apache / GPL**, depending on the component.  
+All components in the program (including ai models, and open source executable program) are with the freely-distributable and alterble license: MIT, Apache 2.0 or GPL license.
 The release package includes **third-party NOTICE / License** files and model license statements.

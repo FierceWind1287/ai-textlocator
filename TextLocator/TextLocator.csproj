@@ -437,6 +437,8 @@
     <Compile Include="AIPage.xaml.cs">
       <DependentUpon>AIPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HotKey\HotKeySettingManager.cs" />
+    <Compile Include="InternalsVisibleTo.cs" />
     <Compile Include="ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
     </Compile>
@@ -448,7 +450,11 @@
     <Compile Include="RecordWindow.xaml.cs">
       <DependentUpon>RecordWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Service\IProcessRunner.cs" />
+    <Compile Include="Service\KeywordServiceClient.cs" />
+    <Compile Include="Service\ProcessRunner.cs" />
     <Compile Include="Util\BpeTokenizer.cs" />
+    <Compile Include="Util\KeywordCsvParser.cs" />
     <Compile Include="WhisperNative.cs" />
     <Compile Include="HowToUseWindow.xaml.cs">
       <DependentUpon>HowToUseWindow.xaml</DependentUpon>
@@ -508,7 +514,6 @@
     <Compile Include="HotKey\HotKeyManager.cs" />
     <Compile Include="HotKey\HotKeyModel.cs" />
     <Compile Include="HotKey\HotKeySetting.cs" />
-    <Compile Include="HotKey\HotKeySettingManager.cs" />
     <Compile Include="HotKey\HotKey.cs" />
     <Compile Include="Index\IndexCore.cs" />
     <Compile Include="Index\MutipleThreadResetEvent.cs" />
@@ -620,9 +625,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <Resource Include="intel-logo-icon-png-svg.png" />
-    <Content Include="KeywordService.runtimeconfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <!-- 删除了 KeywordService.runtimeconfig.json 的 Content 条目 -->
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -726,10 +729,51 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <KeywordServiceFiles Include="..\KeywordService\bin\$(Configuration)\net8.0\**\*" />
+  <!-- ========= 侧车（KeywordService）：从你现有的 publish-cpu 拷到主程序输出 ========= -->
+  <!-- 目标目录：主程序输出下的 extern\KeywordService\ -->
+  <PropertyGroup>
+    <SidecarDestDir>$(TargetDir)extern\KeywordService\</SidecarDestDir>
+  </PropertyGroup>
+  <!-- 首选来源目录：你说的 KeywordService\publish-cpu\ -->
+  <PropertyGroup>
+    <SidecarPublishDir>..\KeywordService\publish-cpu\</SidecarPublishDir>
+  </PropertyGroup>
+  <!-- 如果上面的目录没找到 KeywordService.exe，则回退到 dotnet publish 默认输出 -->
+  <PropertyGroup Condition="!Exists('$(SidecarPublishDir)KeywordService.exe')">
+    <SidecarPublishDir>..\KeywordService\bin\$(Configuration)\net8.0\win-x64\publish\</SidecarPublishDir>
+  </PropertyGroup>
+  <!-- 收集侧车产物（如果来源目录存在） -->
+  <ItemGroup Condition="Exists('$(SidecarPublishDir)')">
+    <SidecarFiles Include="..\KeywordService\publish-cpu\ggml-base.dll" />
+    <SidecarFiles Include="..\KeywordService\publish-cpu\ggml-cpu.dll" />
+    <SidecarFiles Include="..\KeywordService\publish-cpu\ggml.dll" />
+    <SidecarFiles Include="..\KeywordService\publish-cpu\KeywordService.exe" />
+    <SidecarFiles Include="..\KeywordService\publish-cpu\llama.dll" />
+    <SidecarFiles Include="..\KeywordService\publish-cpu\llava_shared.dll" />
   </ItemGroup>
-  <Target Name="CopyKeywordService" AfterTargets="Build">
-    <Copy SourceFiles="@(KeywordServiceFiles)" DestinationFiles="@(KeywordServiceFiles->'$(OutputPath)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  <!-- 可选：如果两个来源目录都不存在，就给个高优先级提示（不强行 dotnet publish） -->
+  <Target Name="WarnSidecarMissing" BeforeTargets="CopySidecarOnBuild" Condition="!Exists('$(SidecarPublishDir)')">
+    <Message Text="KeywordService sidecar not found. Expected at: $(SidecarPublishDir)" Importance="High" />
+  </Target>
+  <!-- 复制前清空目标目录，避免残留旧文件 -->
+  <Target Name="CleanSidecarDest" BeforeTargets="CopySidecarOnBuild" Condition="Exists('$(SidecarDestDir)')">
+    <RemoveDir Directories="$(SidecarDestDir)" />
+  </Target>
+  <!-- 构建后复制侧车 -->
+  <Target Name="CopySidecarOnBuild" AfterTargets="Build" Condition="Exists('$(SidecarPublishDir)')">
+    <Message Text="Copying KeywordService from '$(SidecarPublishDir)' to '$(SidecarDestDir)'" Importance="High" />
+    <MakeDir Directories="$(SidecarDestDir)" />
+    <Copy SourceFiles="@(SidecarFiles)" DestinationFiles="@(SidecarFiles->'$(SidecarDestDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <!-- ==================================================================== -->
+  <!-- 清理时，把侧车产物和可能的旧残留一并删除 -->
+  <Target Name="CleanSidecar" AfterTargets="Clean">
+    <!-- 删掉 extern 下整个侧车目录 -->
+    <RemoveDir Directories="$(OutputPath)extern\KeywordService" />
+    <!-- 如果 bin 根里曾有残留，顺手清掉（按需保留） -->
+    <Delete Files="$(OutputPath)KeywordService.exe" ContinueOnError="true" />
+    <Delete Files="$(OutputPath)KeywordService.*.dll" ContinueOnError="true" />
+    <Delete Files="$(OutputPath)granite-*.gguf" ContinueOnError="true" />
+    <Delete Files="$(OutputPath)LLamaSharp*.dll" ContinueOnError="true" />
   </Target>
 </Project>

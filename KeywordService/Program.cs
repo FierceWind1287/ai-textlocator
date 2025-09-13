@@ -12,7 +12,6 @@ using KeywordAI;
 
 internal class Program
 {
-    // ─────────────── Global stopwatch & file logging ───────────────
     static readonly System.Diagnostics.Stopwatch _sw = System.Diagnostics.Stopwatch.StartNew();
     static StreamWriter? _fileLog;
 
@@ -46,7 +45,6 @@ internal class Program
         try { _fileLog?.WriteLine(line); } catch { }
     }
 
-    // —— Extract 3–5 content words from user text if the model fails —— 
     static string FallbackFromUserText(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return "";
@@ -68,10 +66,8 @@ internal class Program
         return string.Join(", ", tokens);
     }
 
-    // —— Get the actual path of a loaded DLL (e.g., llama.dll) —— 
     [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern IntPtr GetModuleHandle(string lpModuleName);
-
     [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern uint GetModuleFileName(IntPtr hModule, StringBuilder lpFilename, int nSize);
 
@@ -84,46 +80,100 @@ internal class Program
         return n > 0 ? sb.ToString() : null;
     }
 
-    // —— Force preloading of CUDA native libraries —— 
-    static void PreloadCudaNativeLibs()
+    // ────────── Dependency preloading (PATH injection + CUDA/CRT/ggml/llama) ──────────
+    static void EnsureDllSearchPath()
     {
-        string cudaDir = Path.Combine(AppContext.BaseDirectory, "runtimes", "win-x64", "native", "cuda12");
-        string[] candidates =
+        var baseDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+        var path = Environment.GetEnvironmentVariable("PATH") ?? "";
+        if (!path.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                 .Any(p => string.Equals(p.TrimEnd('\\'), baseDir, StringComparison.OrdinalIgnoreCase)))
         {
-            Path.Combine(cudaDir, "ggml-cuda.dll"),
-            Path.Combine(cudaDir, "ggml-base.dll"),
-            Path.Combine(cudaDir, "llama.dll"),
-        };
+            Environment.SetEnvironmentVariable("PATH", baseDir + ";" + path);
+            Log("[env] PATH prepended: " + baseDir);
+        }
+    }
 
-        foreach (var p in candidates)
+    static bool TryLoadDll(string pathOrName)
+    {
+        try
         {
-            if (!File.Exists(p)) continue;
-            try
+            if (File.Exists(pathOrName))
             {
-                NativeLibrary.Load(p);
-                Log("preloaded: " + p);
+                NativeLibrary.Load(pathOrName);
+                Log("preloaded: " + pathOrName);
+                return true;
             }
-            catch (Exception ex)
+            if (NativeLibrary.TryLoad(pathOrName, out var _))
             {
-                Log("WARN preload failed: " + p + " -> " + ex.Message);
+                Log("preloaded(by name): " + pathOrName);
+                return true;
             }
         }
-
-        // Print the actual path of llama.dll
-        var loaded = GetLoadedPath("llama.dll");
-        if (loaded != null) Log("llama.dll loaded from: " + loaded);
-        else Log("llama.dll not loaded yet");
+        catch (Exception ex)
+        {
+            Log("WARN preload failed: " + pathOrName + " -> " + ex.Message);
+        }
+        return false;
     }
+
+    /// <summary>
+    /// Preload GPU-related DLLs (including CUDA runtime).
+    /// If any of the three main CUDA runtime DLLs are missing, returns false.
+    /// </summary>
+    static bool TryPreloadCudaAndFriends()
+    {
+        string baseDir = AppContext.BaseDirectory;
+        string cudaDir = Path.Combine(baseDir, "runtimes", "win-x64", "native", "cuda12");
+
+        EnsureDllSearchPath();
+
+        // nvcuda.dll from the graphics driver (provided by driver, not Toolkit)
+        bool hasDriver = NativeLibrary.TryLoad("nvcuda", out var _);
+        Log("nvcuda.dll: " + (hasDriver ? "FOUND" : "NOT FOUND"));
+        if (!hasDriver) return false;
+
+        // CUDA Toolkit 12.x runtime trio (should already be copied by .csproj into publish dir)
+        string[] cudaRts = { "cublas64_12.dll", "cublasLt64_12.dll", "cudart64_12.dll" };
+        bool[] okRt = new bool[cudaRts.Length];
+
+        // ggml / llama native libs
+        string[] ggmls = { "ggml-cuda.dll", "ggml-base.dll", "llama.dll" };
+        bool[] okGgml = new bool[ggmls.Length];
+
+        // Try loading from publish root, cuda12 subdir, or by name
+        foreach (var name in cudaRts.Concat(ggmls))
+        {
+            string p1 = Path.Combine(baseDir, name);
+            string p2 = Path.Combine(cudaDir, name);
+
+            bool ok = TryLoadDll(p1) || TryLoadDll(p2) || TryLoadDll(name);
+
+            int idxRt = Array.IndexOf(cudaRts, name);
+            if (idxRt >= 0) okRt[idxRt] = ok;
+
+            int idxG = Array.IndexOf(ggmls, name);
+            if (idxG >= 0) okGgml[idxG] = ok;
+        }
+
+        Log("llama.dll    : " + (GetLoadedPath("llama.dll") ?? "NOT LOADED"));
+        Log("ggml-cuda.dll: " + (GetLoadedPath("ggml-cuda.dll") ?? "NOT LOADED"));
+
+        bool cudaOk = okRt.All(x => x);
+        bool ggmlOk = okGgml.All(x => x);
+        if (!cudaOk) Log("[env] CUDA runtime missing: need cublas64_12.dll, cublasLt64_12.dll, cudart64_12.dll");
+        if (!ggmlOk) Log("[env] ggml/llama native missing");
+
+        return cudaOk && ggmlOk;
+    }
+    // ────────── End of dependency preloading ──────────
 
     static async Task<int> Main(string[] args)
     {
         InitFileLog();
-
-        // Enable lower-level logs (e.g., to see CUDA init)
         Environment.SetEnvironmentVariable("GGML_LOG_LEVEL", "DEBUG");
         Environment.SetEnvironmentVariable("LLAMA_LOG_LEVEL", "INFO");
 
-        // Keep only the final results in stdout
+        // Only final result goes to stdout
         var realStdout = Console.Out;
         Console.SetOut(Console.Error);
 
@@ -132,7 +182,6 @@ internal class Program
             Log("[svc] hello, I am new build");
             Log($"base dir: {AppContext.BaseDirectory}");
 
-            // Read query
             if (args.Length == 0)
             {
                 Console.Error.Write("Enter query: ");
@@ -141,82 +190,89 @@ internal class Program
             string userInput = string.Join(" ", args);
             Log($"query: \"{userInput}\"");
 
-            // Model path
-            string modelPath = Path.Combine(AppContext.BaseDirectory, "granite-3.3-2b-instruct-Q4_K_M.gguf");
-            Log($"model path: {modelPath}");
-            if (!File.Exists(modelPath)) { Log("MODEL NOT FOUND"); return 1; }
-
-            // Prompt
-            string prompt =
-              "Return a comma-separated list of 3 to 5 lowercase keywords only.\n" +
-              $"Text: \"{userInput}\"\n" +
-              "Keywords:";
-
-            Log("prompt built");
-
-            // Config
-            int ctxInt = Math.Clamp(ParseEnvInt("KEYWORD_CTX", 256), 8, 4096);
-            int gpuLayer = ParseEnvInt("KEYWORD_GPU_LAYERS", 40);
-            int maxTok = ParseEnvInt("KEYWORD_MAXTOK", 16);
-            Log($"config: ctx={ctxInt}, gpu_layers={gpuLayer}, max_tokens={maxTok}");
-
-            // Preload CUDA libraries
-            PreloadCudaNativeLibs();
-
-            // Load weights and create context
-            var t0 = _sw.ElapsedMilliseconds;
-            Log("loading weights...");
-            var mp = new ModelParams(modelPath)
+            string modelPath = Path.Combine(AppContext.BaseDirectory, "Models", "granite-3.3-2b-instruct-Q4_K_M.gguf");
+            if (!File.Exists(modelPath))
             {
-                ContextSize = (uint)ctxInt,
-                GpuLayerCount = gpuLayer,
-                MainGpu = 0,
-            };
-            using var w = LLamaWeights.LoadFromFile(mp);
+                var alt = Path.Combine(AppContext.BaseDirectory, "granite-3.3-2b-instruct-Q4_K_M.gguf");
+                if (File.Exists(alt)) modelPath = alt;
+            }
+            Log($"model path: {modelPath}");
+            if (!File.Exists(modelPath)) { Log("MODEL NOT FOUND"); SafeWriteFinal(realStdout, ""); return 1; }
+
+            // Configuration (default tries GPU; for GTX 1650/4GB recommend 4–6 layers)
+            int ctxInt = Math.Clamp(ParseEnvInt("KEYWORD_CTX", 256), 8, 4096);
+            int wantGpuLayers = ParseEnvInt("KEYWORD_GPU_LAYERS", 6);
+            int maxTok = ParseEnvInt("KEYWORD_MAXTOK", 16);
+
+            // Early fallback: if CUDA/dependencies missing, disable GPU to avoid 0x8007007E
+            bool canUseGpu = wantGpuLayers > 0 && TryPreloadCudaAndFriends();
+            int gpuLayers = canUseGpu ? wantGpuLayers : 0;
+            Log($"config: ctx={ctxInt}, gpu_layers(want={wantGpuLayers}) -> using {gpuLayers}, max_tokens={maxTok}");
+
+            // Build ModelParams (with fallback)
+            ModelParams mp;
+            try
+            {
+                mp = new ModelParams(modelPath)
+                {
+                    ContextSize = (uint)ctxInt,
+                    GpuLayerCount = gpuLayers,
+                    MainGpu = 0,
+                };
+            }
+            catch (Exception ex) when (gpuLayers > 0)
+            {
+                Log("GPU init failed at ModelParams, fallback CPU: " + ex.Message);
+                mp = new ModelParams(modelPath)
+                {
+                    ContextSize = (uint)ctxInt,
+                    GpuLayerCount = 0,
+                    MainGpu = 0,
+                };
+                gpuLayers = 0;
+            }
+
+            // Load weights (with fallback)
+            LLamaWeights w;
+            var t0 = _sw.ElapsedMilliseconds;
+            try
+            {
+                Log("loading weights...");
+                w = LLamaWeights.LoadFromFile(mp);
+            }
+            catch (Exception ex) when (gpuLayers > 0)
+            {
+                Log("GPU init failed at LoadFromFile, retry CPU: " + ex.Message);
+                mp.GpuLayerCount = 0;
+                gpuLayers = 0;
+                w = LLamaWeights.LoadFromFile(mp);
+            }
             Log($"weights loaded (+{_sw.ElapsedMilliseconds - t0} ms), creating context...");
             var t1 = _sw.ElapsedMilliseconds;
             using var cx = w.CreateContext(mp);
             Log($"context created (+{_sw.ElapsedMilliseconds - t1} ms)");
-            var ex = new StatelessExecutor(w, mp);
 
-            // Inference params
+            var exr = new StatelessExecutor(w, mp);
+
             var ip = new InferenceParams
             {
                 MaxTokens = maxTok,
                 AntiPrompts = new[] { "\n", "query:", "Query:", "keywords:", "keyword:", "answer:", "output:" }
             };
 
-            // Run inference
             Log("inference begin");
             var t2 = _sw.ElapsedMilliseconds;
             var sb = new StringBuilder();
-            await foreach (var tk in ex.InferAsync(prompt, ip, CancellationToken.None))
+            await foreach (var tk in exr.InferAsync(
+                "Return a comma-separated list of 3 to 5 lowercase keywords only.\n" +
+                $"Text: \"{userInput}\"\nKeywords:", ip, CancellationToken.None))
                 sb.Append(tk);
             Log($"inference end (+{_sw.ElapsedMilliseconds - t2} ms)");
 
-            string raw = sb.ToString();
-            Log($"raw length = {raw.Length}");
-
-            // Strip “second round” generations (hallucinated repeats)
-            static string StripSecondRound(string txt)
-            {
-                if (string.IsNullOrWhiteSpace(txt)) return "";
-                txt = txt.Replace('\n', ' ').Replace("\r", "");
-                string[] stops = { "query:", "keywords:", "keyword:", "answer:", "output:" };
-                int cut = txt.Length;
-                foreach (var stop in stops)
-                {
-                    int idx = txt.IndexOf(stop, StringComparison.OrdinalIgnoreCase);
-                    if (idx >= 0 && idx < cut) cut = idx;
-                }
-                return txt.Substring(0, cut).Trim();
-            }
-            raw = StripSecondRound(raw).Trim();
-
-            // Clean & filter blacklist
+            string raw = StripSecondRound(sb.ToString()).Trim();
             string cleaned = KeywordUtils.CleanRawOutput(raw).Replace('_', ' ');
             var bad = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            { "query","keyword","keywords","answer","output","input","example" };
+                { "query","keyword","keywords","answer","output","input","example" };
 
             var items = cleaned
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -225,7 +281,6 @@ internal class Program
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            // Fallback if too few items
             if (items.Count < 3)
             {
                 var fb = FallbackFromUserText(userInput);
@@ -243,25 +298,38 @@ internal class Program
             cleaned = string.Join(", ", items);
             Log($"cleaned: \"{cleaned}\"");
 
-            // Output final result to stdout
-            Console.SetOut(realStdout);
-            Console.WriteLine(cleaned.Trim());
-            Console.SetOut(Console.Error);
-
+            SafeWriteFinal(realStdout, cleaned.Trim());
             Log($"result written to stdout; exit ok (total {_sw.ElapsedMilliseconds} ms)");
             return 0;
         }
         catch (Exception ex)
         {
             Log("FATAL: " + ex);
-            Console.SetOut(realStdout);
-            Console.WriteLine(""); // Prevent deadlocks on caller side
+            SafeWriteFinal(realStdout, "");
             return 2;
         }
-        finally
+        finally { CloseFileLog(); }
+    }
+
+    static string StripSecondRound(string txt)
+    {
+        if (string.IsNullOrWhiteSpace(txt)) return "";
+        txt = txt.Replace('\n', ' ').Replace("\r", "");
+        string[] stops = { "query:", "keywords:", "keyword:", "answer:", "output:" };
+        int cut = txt.Length;
+        foreach (var stop in stops)
         {
-            CloseFileLog();
+            int idx = txt.IndexOf(stop, StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0 && idx < cut) cut = idx;
         }
+        return txt.Substring(0, cut).Trim();
+    }
+
+    static void SafeWriteFinal(TextWriter realStdout, string line)
+    {
+        try { Console.SetOut(realStdout); Console.WriteLine(line ?? ""); Console.Out.Flush(); }
+        catch { }
+        finally { Console.SetOut(Console.Error); }
     }
 
     static int ParseEnvInt(string key, int def)

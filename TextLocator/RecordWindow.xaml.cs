@@ -14,7 +14,7 @@ namespace TextLocator   // ← 与项目命名空间保持一致
 
         public RecordWindow() => InitializeComponent();
 
-        /* ------------ 事件 ------------ */
+        /* ------------ event ------------ */
 
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
@@ -27,7 +27,6 @@ namespace TextLocator   // ← 与项目命名空间保持一致
             _waveIn.DataAvailable += (s, a) =>
             {
                 _buf!.Write(a.Buffer, 0, a.BytesRecorded);
-                // 粗略峰值映射到 0‑100
                 short peak = 0;
                 for (int i = 0; i < a.BytesRecorded; i += 2)
                 {

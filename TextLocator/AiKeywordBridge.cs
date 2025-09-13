@@ -1,113 +1,101 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
 namespace TextLocator
 {
     public static class AiKeywordBridge
     {
         /// <summary>
-        /// Call the external KeywordService.exe and return an array of keywords (in lowercase, without duplicates).
-        /// Compatible with .NET Framework 4.x: Does not rely on asynchronous APIs with CancellationToken.
+        /// Synchronously calls the sidecar KeywordService.exe and returns
+        /// deduplicated lowercase keywords.
+        /// Only intended for .NET Framework 4.x synchronous scenarios
+        /// (do not call directly on the UI thread; wrap with Task.Run instead).
         /// </summary>
         public static string[] GetKeywords(string userQuery,
                                            string keywordServicePath,
-                                           int timeoutMs = 3_000)
+                                           int timeoutMs = 3000)
         {
-            // 1. Process startup information
+            if (string.IsNullOrWhiteSpace(userQuery))
+                return Array.Empty<string>();
+
+            string workDir = Path.GetDirectoryName(keywordServicePath) ?? AppDomain.CurrentDomain.BaseDirectory;
+
+            // Log directory: user-writable directory
+            string logDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "TextLocatorAI", "KeywordService", "logs");
+            try { Directory.CreateDirectory(logDir); } catch { /* Ignore directory creation failure */ }
+
             var psi = new ProcessStartInfo
             {
                 FileName = keywordServicePath,
-                Arguments = $"\"{userQuery.Replace("\"", "\\\"")}\"",
+                Arguments = $"\"{(userQuery ?? "").Replace("\"", "\\\"")}\"",
+                WorkingDirectory = workDir,                // Important
+                UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
                 CreateNoWindow = true
             };
+            // Place logs into a writable directory
+            psi.EnvironmentVariables["KEYWORD_LOG_DIR"] = logDir;
 
-            using (var process = Process.Start(psi))
+            using (var p = Process.Start(psi))
             {
-                if (process == null)
-                    throw new InvalidOperationException("Unable to start the KeywordService process.");
+                if (p == null)
+                    throw new InvalidOperationException("Unable to start KeywordService process.");
 
-                // 2. Asynchronous reading of stdout / stderr
-                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-                Task<string> errorTask = process.StandardError.ReadToEndAsync();
+                // Asynchronous read (prevent blocking)
+                var tOut = p.StandardOutput.ReadToEndAsync();
+                var tErr = p.StandardError.ReadToEndAsync();
 
-                // Wait to exit (with timeout)
-                bool exited = process.WaitForExit(timeoutMs);
-                if (!exited)
+                if (!p.WaitForExit(timeoutMs))
                 {
-                    try { process.Kill(); } catch { /* ignore */ }
-                    throw new TimeoutException("KeywordService did not return within the specified time.");
+                    try { p.Kill(); } catch { }
+                    throw new TimeoutException("KeywordService timed out.");
                 }
 
-                // Wait to read the task for a maximum of 1 second.
-                Task.WaitAll(new[] { outputTask, errorTask }, 1_000);
+                // Allow up to 1s extra for finishing read
+                System.Threading.Tasks.Task.WaitAll(new[] { tOut, tErr }, 1000);
 
-                string stdOut = outputTask.Result ?? string.Empty;
-                string stdErr = errorTask.Result ?? string.Empty;
+                string stdout = tOut.Result ?? "";
+                string stderr = tErr.Result ?? "";
 
-                if (!string.IsNullOrWhiteSpace(stdErr))
-                    Debug.WriteLine($"KeywordService stderr: {stdErr}");
+                if (!string.IsNullOrWhiteSpace(stderr))
+                    Debug.WriteLine("[KeywordService stderr] " + stderr);
 
-                // 3. Extract the line 'Cleaned keywords:' from stdout.
-                string cleanedLine = ExtractCleanedKeywordsLine(stdOut);
+                // Sidecar stdout only outputs "final single-line CSV"
+                string firstLine = stdout
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault() ?? "";
 
-                if (string.IsNullOrWhiteSpace(cleanedLine))
-                    return Array.Empty<string>();
-
-                // 4. Split, deduplicate, lowercase
-                string[] keywords = cleanedLine
-                    .Split(new[] { ',', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(k => k.Trim().ToLowerInvariant())
+                // Split, trim, deduplicate, lowercase
+                string[] arr = firstLine
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => s.Length > 0)
+                    .Select(s => s.ToLowerInvariant())
                     .Distinct()
                     .ToArray();
 
-                return keywords;
+                if (arr.Length >= 3)
+                    return arr;
+
+                // Fallback: split by spaces
+                return (userQuery ?? "")
+                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim().ToLowerInvariant())
+                    .Where(s => s.Length >= 2)
+                    .Take(5)
+                    .ToArray();
             }
         }
 
-        /// <summary>
-        /// Extract the line/part after 'Cleaned keywords:' from the entire stdout text.
-        /// </summary>
-        private static string ExtractCleanedKeywordsLine(string stdout)
-        {
-            if (string.IsNullOrWhiteSpace(stdout)) return string.Empty;
-
-            string[] lines = stdout
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-
-                // same row model: Cleaned keywords: xxx, yyy, zzz
-                const string tag = "Cleaned keywords:";
-                if (line.StartsWith(tag, StringComparison.OrdinalIgnoreCase))
-                {
-                    string inline = line.Substring(tag.Length).Trim();
-                    if (!string.IsNullOrWhiteSpace(inline))
-                        return inline;
-
-                    // Next row mode: the real keyword comes after the line break.
-                    if (i + 1 < lines.Length)
-                        return lines[i + 1].Trim();
-                }
-            }
-
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// Concatenate the keyword array for UI display.
-        /// </summary>
         public static string FormatKeywordsForDisplay(string[] keywords)
-        {
-            return (keywords == null || keywords.Length == 0)
-                   ? string.Empty
-                   : string.Join(", ", keywords);
-        }
+            => (keywords == null || keywords.Length == 0) ? string.Empty : string.Join(", ", keywords);
     }
 }

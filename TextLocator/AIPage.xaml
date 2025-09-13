@@ -6,228 +6,234 @@
         xmlns:local="clr-namespace:TextLocator"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
-        Title="TextLocator-AI Assistant" Height="900" Width="1600"
-        WindowStartupLocation="CenterScreen" Background="White">
+        Title="TextLocator-AI Assistant"
+        Height="900" Width="1600"
+        WindowStartupLocation="CenterScreen"
+        Background="White">
 
-    <Grid Margin="40">
-        <!-- main contents + Credits  -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <!-- Proportional scaling container: scale the 1600x900 design layout as a whole -->
+    <Viewbox Stretch="Fill" StretchDirection="Both">
+        <!-- Design baseline canvas (preserve your original layout and Margin values) -->
+        <Grid Width="1600" Height="900" Margin="40">
+            <!-- main contents + Credits  -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- background -->
-        <Image Source="/Resource/74293af6-21c4-4821-ae9f-b0fa86995923.png"
-               Stretch="Fill" Panel.ZIndex="-1" Opacity="0.2"
-               Margin="-39,-40,-39,-40" Grid.RowSpan="2" />
+            <!-- background -->
+            <Image Source="/Resource/74293af6-21c4-4821-ae9f-b0fa86995923.png"
+                   Stretch="Fill" Panel.ZIndex="-1" Opacity="0.2"
+                   Margin="-39,-40,-39,-40" Grid.RowSpan="2" />
 
-        <!-- Top-right Logo（vertical） -->
-        <StackPanel Orientation="Vertical"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    Margin="0,0,10,0"
-                    Grid.RowSpan="2"
-                    Panel.ZIndex="2"
-                    IsHitTestVisible="False">
-            <Image Source="/Resource/UCL_logo.png"
-                   Height="40" Stretch="Uniform"
-                   SnapsToDevicePixels="True"
-                   Margin="0,0,8,8"/>
-            <Image Source="/Resource/intel-logo-icon-png-svg.png"
-                   Height="80" Stretch="Uniform"
-                   SnapsToDevicePixels="True"/>
-        </StackPanel>
+            <!-- Top-right Logo (vertical) -->
+            <StackPanel Orientation="Vertical"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0,0,10,0"
+                        Grid.RowSpan="2"
+                        Panel.ZIndex="2"
+                        IsHitTestVisible="False">
+                <Image Source="/Resource/UCL_logo.png"
+                       Height="40" Stretch="Uniform"
+                       SnapsToDevicePixels="True"
+                       Margin="0,0,8,8"/>
+                <Image Source="/Resource/intel-logo-icon-png-svg.png"
+                       Height="80" Stretch="Uniform"
+                       SnapsToDevicePixels="True"/>
+            </StackPanel>
 
-        <!-- title -->
-        <TextBlock Text="Welcome to TextLocator AI Assistant"
-                   FontSize="55" FontWeight="Bold" Foreground="Black"
-                   HorizontalAlignment="Center" Margin="0,120,0,0" VerticalAlignment="Top"/>
+            <!-- title -->
+            <TextBlock Text="Welcome to TextLocator AI Assistant"
+                       FontSize="55" FontWeight="Bold" Foreground="Black"
+                       HorizontalAlignment="Center" Margin="0,120,0,0" VerticalAlignment="Top"/>
 
-        <!-- secondary title + github hyper -->
-        <TextBlock FontSize="20" FontWeight="Bold"
-                   Foreground="Gray"
-                   HorizontalAlignment="Center"
-                   Margin="0,220,0,0" VerticalAlignment="Top">
-            <Run Text="AI-Powered Semantic Document Search System" />
-            <Run Text="(" />
-            <Run Text="an addon for " />
-            <Hyperlink NavigateUri="https://github.com/liulei901112/TextLocator"
-                       RequestNavigate="AddonLink_RequestNavigate"
-                       Foreground="#007ACC"
-                       Cursor="Hand"
-                       TextDecorations="{x:Null}">TextLocator</Hyperlink>
-            <Run Text=")" />
-        </TextBlock>
+            <!-- secondary title + GitHub hyperlink -->
+            <TextBlock FontSize="20" FontWeight="Bold"
+                       Foreground="Gray"
+                       HorizontalAlignment="Center"
+                       Margin="0,220,0,0" VerticalAlignment="Top">
+                <Run Text="AI-Powered Semantic Document Search System" />
+                <Run Text="(" />
+                <Run Text="an addon for " />
+                <Hyperlink NavigateUri="https://github.com/liulei901112/TextLocator"
+                           RequestNavigate="AddonLink_RequestNavigate"
+                           Foreground="#007ACC"
+                           Cursor="Hand"
+                           TextDecorations="{x:Null}">TextLocator</Hyperlink>
+                <Run Text=")" />
+            </TextBlock>
 
-        <!-- search & input area（textblock + clean btn + voice input + search） -->
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Margin="0,340,0,0">
-            <Grid>
-                <Border BorderThickness="3" BorderBrush="Gray" CornerRadius="8" Background="White">
-                    <!-- scrollbar -->
-                    <Border.Resources>
-                        <Style TargetType="ScrollBar">
-                            <Setter Property="Width" Value="40"/>
-                            <Setter Property="MinWidth" Value="40"/>
-                        </Style>
-                        <Style TargetType="Thumb">
-                            <Setter Property="MinHeight" Value="60"/>
-                            <Setter Property="Margin" Value="0"/>
-                        </Style>
-                    </Border.Resources>
+            <!-- search & input area (textblock + clean button + voice input + search) -->
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Margin="0,340,0,0">
+                <Grid>
+                    <Border BorderThickness="3" BorderBrush="Gray" CornerRadius="8" Background="White">
+                        <!-- scrollbar -->
+                        <Border.Resources>
+                            <Style TargetType="ScrollBar">
+                                <Setter Property="Width" Value="40"/>
+                                <Setter Property="MinWidth" Value="40"/>
+                            </Style>
+                            <Style TargetType="Thumb">
+                                <Setter Property="MinHeight" Value="60"/>
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </Border.Resources>
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                        <!-- Multi-line input box -->
-                        <TextBox x:Name="CommandInput"
-                                 Grid.Column="0"
-                                 Width="1100" Height="120"
-                                 FontSize="18"
-                                 Padding="16,8,16,8"
-                                 AcceptsReturn="True"
-                                 TextWrapping="Wrap"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            <!-- Multi-line input box -->
+                            <TextBox x:Name="CommandInput"
+                                     Grid.Column="0"
+                                     Width="1100" Height="120"
+                                     FontSize="18"
+                                     Padding="16,8,16,8"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     VerticalContentAlignment="Center"
+                                     TextChanged="CommandInput_TextChanged"
+                                     PreviewKeyUp="CommandInput_PreviewKeyUp"/>
+
+                            <!-- clean button -->
+                            <Button x:Name="CleanButton"
+                                    Grid.Column="1"
+                                    Width="40" Height="40"
+                                    Margin="8,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Content="✕"
+                                    FontSize="16"
+                                    Background="Red"
+                                    Foreground="White"
+                                    Visibility="Hidden"
+                                    Click="CleanButton_Click"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- voice button -->
+                <Button x:Name="MicButton"
+                        Width="60" Height="60"
+                        Background="#3A3A3A"
+                        Margin="16,0,0,0"
+                        BorderThickness="0"
+                        ToolTip="Voice Input"
+                        Click="BtnMic_Click">
+                    <iconPacks:PackIconFontAwesome Kind="MicrophoneSolid"
+                                                   Foreground="White"
+                                                   Width="28" Height="28"/>
+                </Button>
+
+                <!-- search button -->
+                <Button x:Name="SearchButton"
+                        Width="60" Height="60"
+                        Background="#3A3A3A"
+                        BorderThickness="0"
+                        Margin="16,0,0,0"
+                        ToolTip="Search with AI"
+                        Click="SearchButton_Click">
+                    <iconPacks:PackIconFontAwesome Kind="SearchSolid"
+                                                   Foreground="White"
+                                                   Width="28" Height="28"/>
+                </Button>
+            </StackPanel>
+
+            <!-- Search Area + 'how to use' link -->
+            <StackPanel Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <!-- 1st row: Search Area + Classic Search -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="Search Area:" FontSize="16"
+                               VerticalAlignment="Center" Foreground="Black" />
+
+                    <Border Grid.Column="1" Margin="10,0,0,0"
+                            BorderThickness="2" BorderBrush="Gray"
+                            CornerRadius="6" Background="Transparent">
+                        <TextBox x:Name="EnableAreaInfos"
+                                 Text="Default Area"
+                                 FontSize="16"
+                                 Height="40" Width="200"
+                                 IsReadOnly="True"
                                  Background="Transparent"
+                                 Foreground="Gray"
                                  BorderThickness="0"
                                  VerticalContentAlignment="Center"
-                                 TextChanged="CommandInput_TextChanged"
-                                 PreviewKeyUp="CommandInput_PreviewKeyUp"/>
+                                 HorizontalContentAlignment="Left"
+                                 MouseDoubleClick="AreaInfos_MouseDoubleClick"/>
+                    </Border>
 
-                        <!-- clean button -->
-                        <Button x:Name="CleanButton"
-                                Grid.Column="1"
-                                Width="40" Height="40"
-                                Margin="8,0,8,0"
-                                VerticalAlignment="Center"
-                                Content="✕"
-                                FontSize="16"
-                                Background="Red"
-                                Foreground="White"
-                                Visibility="Hidden"
-                                Click="CleanButton_Click"/>
-                    </Grid>
-                </Border>
-            </Grid>
+                    <Button Grid.Column="3"
+                            Content="Go to Classic Search"
+                            Width="180" Height="40"
+                            Margin="0,0,100,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Click="EnterFileSearch_Click"
+                            Background="#007ACC"
+                            Foreground="White"
+                            FontWeight="SemiBold"/>
+                </Grid>
 
-            <!-- voice btn -->
-            <Button x:Name="MicButton"
-                    Width="60" Height="60"
-                    Background="#3A3A3A"
-                    Margin="16,0,0,0"
-                    BorderThickness="0"
-                    ToolTip="Voice Input"
-                    Click="BtnMic_Click">
-                <iconPacks:PackIconFontAwesome Kind="MicrophoneSolid"
-                                               Foreground="White"
-                                               Width="28" Height="28"/>
-            </Button>
-
-            <!-- search btn -->
-            <Button x:Name="SearchButton"
-                    Width="60" Height="60"
-                    Background="#3A3A3A"
-                    BorderThickness="0"
-                    Margin="16,0,0,0"
-                    ToolTip="Search with AI"
-                    Click="SearchButton_Click">
-                <iconPacks:PackIconFontAwesome Kind="SearchSolid"
-                                               Foreground="White"
-                                               Width="28" Height="28"/>
-            </Button>
-        </StackPanel>
-
-        <!-- Search Area  + 'how to use' link -->
-        <StackPanel Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,10">
-            <!-- 1st row：Search Area + Classic Search -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0"
-                           Text="Search Area:" FontSize="16"
-                           VerticalAlignment="Center" Foreground="Black" />
-
-                <Border Grid.Column="1" Margin="10,0,0,0"
-                        BorderThickness="2" BorderBrush="Gray"
-                        CornerRadius="6" Background="Transparent">
-                    <TextBox x:Name="EnableAreaInfos"
-                             Text="Default Area"
-                             FontSize="16"
-                             Height="40" Width="200"
-                             IsReadOnly="True"
-                             Background="Transparent"
-                             Foreground="Gray"
-                             BorderThickness="0"
-                             VerticalContentAlignment="Center"
-                             HorizontalContentAlignment="Left"
-                             MouseDoubleClick="AreaInfos_MouseDoubleClick"/>
-                </Border>
-
-                <Button Grid.Column="3"
-                        Content="Go to Classic Search"
-                        Width="180" Height="40"
-                        Margin="0,0,100,0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Click="EnterFileSearch_Click"
-                        Background="#007ACC"
-                        Foreground="White"
-                        FontWeight="SemiBold"/>
-            </Grid>
-
-            <!-- 2nd row：text hyperlink (how to use) -->
-            <TextBlock Margin="0,60,0,0" FontSize="14" HorizontalAlignment="Left">
-                <Hyperlink Foreground="#007ACC"
-           TextDecorations="Underline"
-           Cursor="Hand"
-           Click="HowToUseLink_Click">
-    How to use this app
-</Hyperlink>
-            </TextBlock>
-        </StackPanel>
-
-        <!-- Credits Box -->
-        <Border Grid.Row="1"
-                Margin="0,12,0,0"
-                Padding="10"
-                CornerRadius="8"
-                Background="Transparent">
-            <StackPanel HorizontalAlignment="Center">
-                <TextBlock TextAlignment="Center"
-                           FontSize="14"
-                           FontWeight="SemiBold"
-                           Foreground="#444">
-                    <Run Text="UCL IXN Project — Collaboration with Intel"/>
-                </TextBlock>
-
-                <TextBlock Text="SmolPC AI Appp Collection —TextLocator AI Assistant"
-                           FontSize="14"
-                           FontWeight="SemiBold"
-                           Foreground="#444"
-                           TextAlignment="Center"
-                           Margin="0,2,0,0"/>
-
-                <TextBlock FontSize="13"
-                           Foreground="#444"
-                           TextAlignment="Center"
-                           Margin="0,2,0,0"
-                           FontWeight="SemiBold">
-                    <Run Text="Jinshuo Liu"/>
-                    <Run Text="  •  "/>
-                    <Run Text="Guided by Prof. Dean Mohamedally &amp; Prof.Graham Roberts "/>
+                <!-- 2nd row: text hyperlink (how to use) -->
+                <TextBlock Margin="0,60,0,0" FontSize="14" HorizontalAlignment="Left">
+                    <Hyperlink Foreground="#007ACC"
+                               TextDecorations="Underline"
+                               Cursor="Hand"
+                               Click="HowToUseLink_Click">
+                        How to use this app
+                    </Hyperlink>
                 </TextBlock>
             </StackPanel>
-        </Border>
-    </Grid>
+
+            <!-- Credits Box -->
+            <Border Grid.Row="1"
+                    Margin="0,12,0,0"
+                    Padding="10"
+                    CornerRadius="8"
+                    Background="Transparent">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock TextAlignment="Center"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="#444">
+                        <Run Text="UCL IXN Project — Collaboration with Intel"/>
+                    </TextBlock>
+
+                    <TextBlock Text="SmolPC AI Appp Collection —TextLocator AI Assistant"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="#444"
+                               TextAlignment="Center"
+                               Margin="0,2,0,0"/>
+
+                    <TextBlock FontSize="13"
+                               Foreground="#444"
+                               TextAlignment="Center"
+                               Margin="0,2,0,0"
+                               FontWeight="SemiBold">
+                        <Run Text="Jinshuo Liu"/>
+                        <Run Text="  •  "/>
+                        <Run Text="Guided by Prof. Dean Mohamedally &amp; Prof.Graham Roberts "/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Viewbox>
 </Window>

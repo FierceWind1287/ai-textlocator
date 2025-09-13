@@ -4,24 +4,37 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;              // ← Added
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Navigation;
-using TextLocator.Util;
+using TextLocator.Service;          // ← Added: our wrapped sidecar client
+using TextLocator.Util;             // already exists (CSV parsing, etc.)
 
 namespace TextLocator
 {
     public partial class AIPage : Window
     {
-        // ────────────── construct ──────────────
+        // ────────────── Added: wrapped keyword client ──────────────
+        private readonly KeywordServiceClient _kwClient;
+
+        // ────────────── Constructor ──────────────
         public AIPage()
         {
             InitializeComponent();
-            LoadAreaInfo();                       //Fill in the 'Search Area' information.
+            LoadAreaInfo();                       // Fill in the 'Search Area' information.
 
-            // ★ Optional: Warm up the KeywordService in the background once for faster first frame loading.
+            // Use our wrapped client (locating KeywordService.exe from executable directory)
+            _kwClient = KeywordServiceClient.FromAppBase(new ProcessRunner(), timeoutMs: 60000);
+
+            // (Optional) Force CPU first, reduce environment dependencies; later you can change layers back to 4–6 for GPU
+            Environment.SetEnvironmentVariable("KEYWORD_GPU_LAYERS", "0");
+            Environment.SetEnvironmentVariable("KEYWORD_CTX", "512");
+            Environment.SetEnvironmentVariable("KEYWORD_MAXTOK", "24");
+
+            // ★ Optional: background warm-up to reduce first response latency
             _ = Task.Run(() => WarmupKeywordService());
         }
 
@@ -58,7 +71,7 @@ namespace TextLocator
 
             EnableAreaInfos.Text = string.Join(", ", list.Select(a => a.AreaName));
             EnableAreaInfos.ToolTip = string.Join(Environment.NewLine,
-                list.Select(a => $"{a.AreaName}: {string.Join("，", a.AreaFolders)}"));
+                list.Select(a => $"{a.AreaName}: {string.Join(", ", a.AreaFolders)}"));
         }
 
         // ────────────── Input box & Clear button ──────────────
@@ -77,7 +90,7 @@ namespace TextLocator
             if (e.Key == Key.Enter) SearchButton_Click(this, new RoutedEventArgs());
         }
 
-        // ────────────── Audio related──────────────
+        // ────────────── Audio related ──────────────
         private WaveInEvent _mic;
         private readonly List<float> _audioBuffer = new();
         private bool _isRecording;
@@ -144,7 +157,7 @@ namespace TextLocator
             finally { prog.Close(); }
         }
 
-        // ────────────────── search btn ──────────────────
+        // ────────────── Search button ──────────────
         private async void SearchButton_Click(object sender, RoutedEventArgs e)
         {
             string query = CommandInput.Text?.Trim() ?? "";
@@ -166,8 +179,8 @@ namespace TextLocator
 
             try
             {
-                // Perform keyword extraction in a background thread 
-                string[] keywords = await ExtractKeywordsAsync(query);
+                // Use the wrapped client (stdout one-line only + parse + fallback)
+                var keywords = await _kwClient.ExtractAsync(query, CancellationToken.None);
 
                 if (keywords.Length == 0)
                 {
@@ -207,82 +220,25 @@ namespace TextLocator
             }
         }
 
-        // ────────────────── call KeywordService.exe ──────────────────
-        private async Task<string[]> ExtractKeywordsAsync(string userInput)
+        // ────────────── (Replaced) call sidecar: delegate to client ──────────────
+        private Task<string[]> ExtractKeywordsAsync(string userInput)
         {
-            string exe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "KeywordService.exe");
-            if (!File.Exists(exe))
-                throw new FileNotFoundException("Keyword service does not exist", exe);
-
-            string escaped = userInput.Replace("\"", "\\\"");
-            var psi = new ProcessStartInfo
-            {
-                FileName = exe,
-                Arguments = "\"" + escaped + "\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(exe)!    // ★ Set a fixed working directory to avoid issues with relative paths.
-            };
-
-            using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
-
-            // Collect stderr to facilitate throwing an exception on timeout.
-            var errBuf = new System.Text.StringBuilder();
-            p.ErrorDataReceived += (s, ev) =>
-            {
-                if (!string.IsNullOrEmpty(ev.Data))
-                {
-                    errBuf.AppendLine(ev.Data);
-                    Debug.WriteLine("[KeywordService][stderr] " + ev.Data);  
-                }
-            };
-
-            var sw = Stopwatch.StartNew();
-            p.Start();
-            p.BeginErrorReadLine();
-
-            // Read stdout (keyword results)
-            var outTask = p.StandardOutput.ReadToEndAsync();
-
-            // Waiting to complete or timeout
-            var finished = await Task.WhenAny(outTask, Task.Delay(60_000));
-            if (finished != outTask)
-            {
-                try { if (!p.HasExited) p.Kill(); } catch { /* ignore */ }
-                Debug.WriteLine($"[KeywordService][timeout] after {sw.ElapsedMilliseconds} ms");
-                throw new TimeoutException("KeywordService initial load timeout (>60s).\n" + errBuf.ToString());
-            }
-
-            // Ensure that the child process exits and handle the stderr.
-            p.WaitForExit();
-            Debug.WriteLine($"[KeywordService] done in {sw.ElapsedMilliseconds} ms");
-
-            string raw = (await outTask).Trim();
-            Debug.WriteLine("[KeywordService][stdout] " + raw);
-
-            return string.IsNullOrWhiteSpace(raw)
-                   ? Array.Empty<string>()
-                   : raw.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(k => k.Trim())
-                        .Where(k => k.Length > 0)
-                        .Distinct()
-                        .ToArray();
+            // For compatibility with your old calls, just delegate to _kwClient
+            return _kwClient.ExtractAsync(userInput, CancellationToken.None);
         }
+
         private void HowToUseLink_Click(object sender, RoutedEventArgs e)
         {
             new HowToUseWindow { Owner = this }.ShowDialog();
         }
 
-
-        // ────────────────── warm up ──────────────────
+        // ────────────── Warm-up ──────────────
         private async Task WarmupKeywordService()
         {
             try
             {
                 var sw = Stopwatch.StartNew();
-                _ = await ExtractKeywordsAsync("warm-up"); // The log will be output in ExtractKeywordsAsync.
+                var _ = await _kwClient.ExtractAsync("warm-up", CancellationToken.None);
                 Debug.WriteLine($"[Warmup] finished in {sw.ElapsedMilliseconds} ms");
             }
             catch (Exception ex)

@@ -1,22 +1,86 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<!-- General -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<PlatformTarget>x64</PlatformTarget>
 
-  <ItemGroup>
-    <PackageReference Include="LLamaSharp" Version="0.24.0" />
-    <PackageReference Include="LLamaSharp.Backend.Cuda12" Version="0.24.0" />
-  </ItemGroup>
+		<!-- Single-file publish (CPU usable) -->
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<PublishTrimmed>false</PublishTrimmed>
+		<DebugType>none</DebugType>
+		<Nullable>enable</Nullable>
+
+		<!-- Version and CPU SIMD selection: noavx | avx | avx2 | avx512 -->
+		<LlamaVer>0.24.0</LlamaVer>
+		<CpuSimd Condition="'$(CpuSimd)'==''">avx2</CpuSimd>
+	</PropertyGroup>
+
+	<!-- CPU-only package (prevent auto-copy of runtime/native, we manually copy one SIMD set) -->
 	<ItemGroup>
-  <None Include="Models\granite-3.3-2b-instruct-Q4_K_M.gguf">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    <Link>granite-3.3-2b-instruct-Q4_K_M.gguf</Link> 
-  </None>
+		<PackageReference Include="LLamaSharp" Version="$(LlamaVer)" />
+		<PackageReference Include="LLamaSharp.Backend.Cpu" Version="$(LlamaVer)"
+						  ExcludeAssets="runtime;native" GeneratePathProperty="true" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseCuda)'!='true'">
+  <Content Include="$(WINDIR)\System32\vcomp140.dll" Condition="Exists('$(WINDIR)\System32\vcomp140.dll')">
+    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    <Link>vcomp140.dll</Link>
+  </Content>
+  <Content Include="$(WINDIR)\System32\vcruntime140.dll" Condition="Exists('$(WINDIR)\System32\vcruntime140.dll')">
+    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    <Link>vcruntime140.dll</Link>
+  </Content>
+  <Content Include="$(WINDIR)\System32\vcruntime140_1.dll" Condition="Exists('$(WINDIR)\System32\vcruntime140_1.dll')">
+    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    <Link>vcruntime140_1.dll</Link>
+  </Content>
+  <Content Include="$(WINDIR)\System32\msvcp140.dll" Condition="Exists('$(WINDIR)\System32\msvcp140.dll')">
+    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    <Link>msvcp140.dll</Link>
+  </Content>
+  <Content Include="$(WINDIR)\System32\concrt140.dll" Condition="Exists('$(WINDIR)\System32\concrt140.dll')">
+    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    <Link>concrt140.dll</Link>
+  </Content>
 </ItemGroup>
 
+	<!-- Safeguard: do not include manually placed ggml*/llama* files as content, avoid duplication -->
+	<ItemGroup>
+		<None Remove="**\ggml-*.dll" />
+		<None Remove="**\llama*.dll" />
+		<Content Remove="**\ggml-*.dll" />
+		<Content Remove="**\llama*.dll" />
+	</ItemGroup>
+
+	<!-- Models: publish as physical files (not packed into single file) -->
+	<ItemGroup>
+		<Content Include="Models\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</Content>
+	</ItemGroup>
+
+	<!-- Copy only one set of CPU SIMD native DLLs to avoid name conflicts -->
+	<ItemGroup>
+		<Content Include="$(NuGetPackageRoot)llamasharp.backend.cpu\$(LlamaVer)\runtimes\win-x64\native\$(CpuSimd)\*.dll"
+				 Condition="Exists('$(NuGetPackageRoot)llamasharp.backend.cpu\$(LlamaVer)\runtimes\win-x64\native\$(CpuSimd)')">
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<Link>%(Filename)%(Extension)</Link>
+			<!-- Flatten into publish root -->
+		</Content>
+	</ItemGroup>
 
 </Project>

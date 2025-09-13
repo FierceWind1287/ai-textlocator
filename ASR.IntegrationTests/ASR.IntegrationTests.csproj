@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Test project target framework: .NET Framework 4.7.2 (better compatibility) -->
+		<TargetFramework>net462</TargetFramework>
+
+		<!-- Must be x64 to load your C++ WhisperBridge.dll -->
+		<PlatformTarget>x64</PlatformTarget>
+
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+
+		<!-- Auto-generate binding redirects under .NET Framework to avoid dependency conflicts -->
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Package versions known to be stable with net472 -->
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageReference Include="xunit" Version="2.4.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
+		<!-- Code coverage tool is not necessary for .NET Framework; add if required -->
+		<!-- <PackageReference Include="coverlet.collector" Version="6.0.0" /> -->
+	</ItemGroup>
+
+	<!-- Optional: copy test audio files into output directory (e.g., testdata\hello16k.wav) -->
+	<ItemGroup>
+		<None Include="testdata\**\*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="extern\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<!-- 复制 KeywordService.exe -->
+		<None Include="..\..\TextLocator\KeywordService\bin\Release\net8.0\KeywordService.exe">
+			<Link>KeywordService.exe</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\TextLocator\TextLocator.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="testdata\" />
+	</ItemGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="set &quot;SRC=$(SolutionDir)TextLocator\TextLocator\bin\x64\$(Configuration)\extern&quot;&#xD;&#xA;set &quot;DST=$(TargetDir)extern&quot;&#xD;&#xA;&#xD;&#xA;if not exist &quot;%25SRC%25&quot; (&#xD;&#xA;  echo [WARN] Source extern folder not found: %25SRC%25&#xD;&#xA;  goto :EOF&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;echo [COPY extern] From %25SRC%25 to %25DST%25&#xD;&#xA;xcopy &quot;%25SRC%25\*&quot; &quot;%25DST%25\&quot; /E /I /Y /D /R &gt;nul&#xD;&#xA;&#xD;&#xA;exit /b 0&#xD;&#xA;" />
+	</Target>
+
+</Project>
